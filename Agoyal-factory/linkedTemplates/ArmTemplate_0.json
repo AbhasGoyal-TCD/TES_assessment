@@ -372,7 +372,6 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"fileName": "superstore_south_sales.json",
 						"folderPath": "JSON_Format",
 						"container": "tes-rawdata"
 					}
@@ -875,7 +874,7 @@
 								"type": "JsonSink",
 								"storeSettings": {
 									"type": "AzureBlobStorageWriteSettings",
-									"copyBehavior": "FlattenHierarchy"
+									"copyBehavior": "PreserveHierarchy"
 								},
 								"formatSettings": {
 									"type": "JsonWriteSettings",
