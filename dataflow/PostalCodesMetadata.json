@@ -22,7 +22,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "CompaniesSQL",
+						"referenceName": "PostalCodesSQL",
 						"type": "DatasetReference"
 					},
 					"name": "InsertinSQL"
@@ -83,24 +83,27 @@
 				"MarkUpdates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
-				"          Company_ID as integer,",
-				"          Company as string,",
-				"          Contact as string,",
-				"          Region as string",
+				"          Postal_Code as integer,",
+				"          State as string,",
+				"          Region as string,",
+				"          Country_Region as string,",
+				"          Country as string",
 				"     ),",
 				"     deletable:false,",
 				"     insertable:true,",
 				"     updateable:true,",
 				"     upsertable:false,",
+				"     keys:['Postal_Code'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          Company_ID = company_id,",
-				"          Company = company,",
-				"          Contact = contact,",
-				"          Region = region",
+				"          Postal_Code = TransformType@postal_code,",
+				"          State = CheckforDuplicates@state,",
+				"          Region = CheckforDuplicates@region,",
+				"          Country = CheckforDuplicates@country,",
+				"          Country_Region = TransformType@Country_Region",
 				"     )) ~> InsertinSQL"
 			]
 		}
