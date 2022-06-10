@@ -1024,14 +1024,7 @@
 					{
 						"name": "UploadMetadataCompanies",
 						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProduct_Types",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
+						"dependsOn": [],
 						"policy": {
 							"timeout": "1.00:00:00",
 							"retry": 0,
@@ -1088,10 +1081,7 @@
 								"coreCount": 8,
 								"computeType": "General"
 							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "00d02c52-5732-47d2-9765-baf5bf378ef7"
-							}
+							"traceLevel": "Fine"
 						}
 					},
 					{
@@ -1129,7 +1119,14 @@
 					{
 						"name": "UploadMetadataProducts",
 						"type": "ExecuteDataFlow",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "UploadMetadataProduct_Types",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "1.00:00:00",
 							"retry": 0,
@@ -1154,10 +1151,7 @@
 								"coreCount": 8,
 								"computeType": "General"
 							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "4b36178a-e8d2-4d21-beb5-cf140cbdec22"
-							}
+							"traceLevel": "Fine"
 						}
 					}
 				],
@@ -1653,10 +1647,7 @@
 						"     ),",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false) ~> ReadSource",
+						"     ignoreNoFilesFound: false) ~> ReadSource",
 						"source(output(",
 						"          Postal_Code as integer,",
 						"          State as string,",
@@ -1867,10 +1858,7 @@
 						"     ),",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false) ~> ReadSource",
+						"     ignoreNoFilesFound: false) ~> ReadSource",
 						"source(output(",
 						"          Product_type as string,",
 						"          Product_Category as string",
