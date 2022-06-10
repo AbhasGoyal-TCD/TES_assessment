@@ -25,7 +25,7 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "3f239e76-9785-448c-bc0e-eaa838093525"
+						"customizedCheckpointKey": "e187586a-33ac-41ac-8b96-6e2483e0c365"
 					}
 				}
 			},
@@ -42,11 +42,79 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"dataflow": {
+						"referenceName": "PostalCodesMetadata",
+						"type": "DataFlowReference"
+					},
 					"compute": {
 						"coreCount": 8,
 						"computeType": "General"
 					},
-					"traceLevel": "Fine"
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "feb8cf31-1f64-47ce-aa89-73e8807c177b"
+					}
+				}
+			},
+			{
+				"name": "UploadMetadataProduct_Types",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "ProductTypesMetadata",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "447a34be-ee22-4b97-80b4-b47edfbde522"
+					}
+				}
+			},
+			{
+				"name": "UploadMetadataProducts",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProduct_Types",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "ProductsMetadata",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "43916265-e174-49cf-93a0-db8cd51ba9a2"
+					}
 				}
 			}
 		],
