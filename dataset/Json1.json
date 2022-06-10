@@ -10,6 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
+				"fileName": "*.json",
 				"folderPath": "JSON_Format",
 				"container": "tes-rawdata"
 			},

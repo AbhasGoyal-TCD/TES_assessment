@@ -10,7 +10,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "superstore_south_sales.json",
 				"folderPath": "JSON_Format",
 				"container": "tes-rawdata"
 			}
