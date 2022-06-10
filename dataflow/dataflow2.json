@@ -1,0 +1,106 @@
+{
+	"name": "dataflow2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Excel6",
+						"type": "DatasetReference"
+					},
+					"name": "ReadCompaniesSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureSqlTable2",
+						"type": "DatasetReference"
+					},
+					"name": "ReadCompaniesLoaded"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlTable2",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinSQLCompanies"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CheckforDuplicatesCompanies"
+				},
+				{
+					"name": "CheckCompaniesUpdate"
+				},
+				{
+					"name": "MarkCompanies"
+				},
+				{
+					"name": "TransformTypeCompanies"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          company_id as string,",
+				"          company as string,",
+				"          contact as string,",
+				"          region as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false) ~> ReadCompaniesSource",
+				"source(output(",
+				"          Company_ID as integer,",
+				"          Company as string,",
+				"          Contact as string,",
+				"          Region as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ReadCompaniesLoaded",
+				"ReadCompaniesSource aggregate(groupBy(company_id,",
+				"          company,",
+				"          contact,",
+				"          region),",
+				"     Dummy = sum(1)) ~> CheckforDuplicatesCompanies",
+				"TransformTypeCompanies, ReadCompaniesLoaded join(TransformTypeCompanies@company_id == ReadCompaniesLoaded@Company_ID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> CheckCompaniesUpdate",
+				"CheckCompaniesUpdate alterRow(updateIf(TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region),",
+				"     insertIf(isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region))) ~> MarkCompanies",
+				"CheckforDuplicatesCompanies derive(company_id = toInteger(company_id)) ~> TransformTypeCompanies",
+				"MarkCompanies sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Company_ID as integer,",
+				"          Company as string,",
+				"          Contact as string,",
+				"          Region as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Company_ID = company_id,",
+				"          Company = company,",
+				"          Contact = contact,",
+				"          Region = region",
+				"     )) ~> InsertinSQLCompanies"
+			]
+		}
+	}
+}
