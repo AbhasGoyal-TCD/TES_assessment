@@ -5,7 +5,14 @@
 			{
 				"name": "UploadMetadataCompanies",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProduct_Types",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
@@ -25,14 +32,21 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "e187586a-33ac-41ac-8b96-6e2483e0c365"
+						"customizedCheckpointKey": "2f77c785-4c17-42ae-a0cc-9af0881d4571"
 					}
 				}
 			},
 			{
 				"name": "UploadMetadataPostal_Codes",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProduct_Types",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
@@ -52,7 +66,7 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "feb8cf31-1f64-47ce-aa89-73e8807c177b"
+						"customizedCheckpointKey": "00d02c52-5732-47d2-9765-baf5bf378ef7"
 					}
 				}
 			},
@@ -77,10 +91,7 @@
 						"coreCount": 8,
 						"computeType": "General"
 					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "447a34be-ee22-4b97-80b4-b47edfbde522"
-					}
+					"traceLevel": "Fine"
 				}
 			},
 			{
@@ -113,7 +124,7 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "43916265-e174-49cf-93a0-db8cd51ba9a2"
+						"customizedCheckpointKey": "49d36e90-e1f2-4c5c-910e-2b49d674f82b"
 					}
 				}
 			}
