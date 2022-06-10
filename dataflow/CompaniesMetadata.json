@@ -75,7 +75,7 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> CheckCompaniesUpdate",
-				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company_id != FilterExistingRows@Retain@Company_ID || FilterExistingRows@Retain@company != FilterExistingRows@Retain@Company || FilterExistingRows@Retain@contact != FilterExistingRows@Retain@Contact || FilterExistingRows@Retain@region != FilterExistingRows@Retain@Region)) ~> MarkCompanies",
+				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company != FilterExistingRows@Retain@Company || FilterExistingRows@Retain@contact != FilterExistingRows@Retain@Contact || FilterExistingRows@Retain@region != FilterExistingRows@Retain@Region)) ~> MarkCompanies",
 				"CheckforDuplicatesCompanies derive(company_id = toInteger(company_id)) ~> TransformTypeCompanies",
 				"CheckCompaniesUpdate split((TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region) \r",
 				"|| (isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region)),",
