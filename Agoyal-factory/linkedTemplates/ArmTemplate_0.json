@@ -203,6 +203,33 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "JSON_Format",
+						"container": "tes-rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DestinationDataset_lpx')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -532,384 +559,193 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
+			"name": "[concat(parameters('factoryName'), '/CompaniesSQL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"type": "MappingDataFlow",
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Company_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Contact",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Region",
+						"type": "nvarchar"
+					}
+				],
 				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DelimitedText1",
-								"type": "DatasetReference"
-							},
-							"name": "Csv"
-						},
-						{
-							"dataset": {
-								"referenceName": "SourceDataset_lpx",
-								"type": "DatasetReference"
-							},
-							"name": "Xlsx1"
-						},
-						{
-							"dataset": {
-								"referenceName": "Json2",
-								"type": "DatasetReference"
-							},
-							"name": "Json"
-						},
-						{
-							"dataset": {
-								"referenceName": "Excel1",
-								"type": "DatasetReference"
-							},
-							"name": "Xlsx2"
-						}
-					],
-					"sinks": [
-						{
-							"name": "sink1"
-						}
-					],
-					"transformations": [
-						{
-							"name": "RenameCsvColumns"
-						},
-						{
-							"name": "RenameXlsxColumns"
-						},
-						{
-							"name": "FilterUnwantedRows"
-						},
-						{
-							"name": "union1"
-						},
-						{
-							"name": "FlattenJson"
-						},
-						{
-							"name": "TransfomTypeJson"
-						},
-						{
-							"name": "TransformTypeXlsx2"
-						},
-						{
-							"name": "RenameXlsx2Columns"
-						},
-						{
-							"name": "RemoveDuplicatesJson"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          order_number as string,",
-						"          ord_date as date 'dd/MM/yyyy',",
-						"          ship_date as date 'dd/MM/yyyy',",
-						"          ship_type as string,",
-						"          customer_key as string,",
-						"          customer_section as string,",
-						"          post_code as string,",
-						"          product_id as string,",
-						"          sales as double,",
-						"          {#_items} as integer,",
-						"          reduction as float,",
-						"          total as float",
-						"     ),",
-						"     allowSchemaDrift: false,",
-						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     rowUrlColumn: 'Source File') ~> Csv",
-						"source(output(",
-						"          {Order ID} as string,",
-						"          {Order Date} as date 'dd/MM/yyyy',",
-						"          {Ship Date} as date 'dd/MM/yyyy',",
-						"          {Ship Mode} as string,",
-						"          {Customer ID} as string,",
-						"          Segment as string,",
-						"          {Postal Code} as string,",
-						"          {Product ID} as string,",
-						"          Sales as double,",
-						"          Quantity as integer,",
-						"          Discount as float,",
-						"          Profit as float",
-						"     ),",
-						"     allowSchemaDrift: false,",
-						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     rowUrlColumn: 'Source File') ~> Xlsx1",
-						"source(output(",
-						"          sample_data_south as (Order as string, Date as string, {Date Shipped} as string, {Shipping Method} as string, {Customer Number} as string, Segment as string, {Postal Code 1} as string, {Product ID} as string, Sales as string, Quantity as string, Discount as string, Profit as string)[]",
-						"     ),",
-						"     allowSchemaDrift: false,",
-						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     rowUrlColumn: 'Source File',",
-						"     documentForm: 'arrayOfDocuments') ~> Json",
-						"source(output(",
-						"          Column_1 as string,",
-						"          Column_2 as string,",
-						"          Column_3 as string,",
-						"          Column_4 as string,",
-						"          Column_5 as string,",
-						"          Column_6 as string,",
-						"          Column_7 as string,",
-						"          Column_8 as string,",
-						"          Column_9 as string,",
-						"          Column_10 as string,",
-						"          Column_11 as string,",
-						"          Column_12 as string",
-						"     ),",
-						"     allowSchemaDrift: false,",
-						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     rowUrlColumn: 'Source File') ~> Xlsx2",
-						"Csv select(mapColumn(",
-						"          {Order ID} = order_number,",
-						"          {Order Date} = ord_date,",
-						"          {Ship Date} = ship_date,",
-						"          {Ship Mode} = ship_type,",
-						"          {Customer ID} = customer_key,",
-						"          Segment = customer_section,",
-						"          {Postal Code} = post_code,",
-						"          {Product ID} = product_id,",
-						"          Sales = sales,",
-						"          Quantity = {#_items},",
-						"          Discount = reduction,",
-						"          Profit = total,",
-						"          {Source File}",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RenameCsvColumns",
-						"Xlsx1 select(mapColumn(",
-						"          {Order ID},",
-						"          {Order Date},",
-						"          {Ship Date},",
-						"          {Ship Mode},",
-						"          {Customer ID},",
-						"          Segment,",
-						"          {Postal Code},",
-						"          {Product ID},",
-						"          Sales,",
-						"          Quantity,",
-						"          Discount,",
-						"          Profit,",
-						"          {Source File}",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RenameXlsxColumns",
-						"Xlsx2 filter(!isNull({Column_1}) && !isNull({Column_2}) && !isNull({Column_3}) && !isNull({Column_4}) && !isNull({Column_5}) && !isNull({Column_6}) && !isNull({Column_7}) && !isNull({Column_8}) && !isNull({Column_9}) && !isNull({Column_10}) && !isNull({Column_11}) && isDouble({Column_12})) ~> FilterUnwantedRows",
-						"RenameCsvColumns, RenameXlsxColumns, RemoveDuplicatesJson, RenameXlsx2Columns union(byName: true)~> union1",
-						"Json foldDown(unroll(sample_data_south),",
-						"     mapColumn(",
-						"          {Customer ID} = sample_data_south.{Customer Number},",
-						"          {Order Date} = sample_data_south.Date,",
-						"          {Ship Date} = sample_data_south.{Date Shipped},",
-						"          Discount = sample_data_south.Discount,",
-						"          {Order ID} = sample_data_south.Order,",
-						"          {Postal Code} = sample_data_south.{Postal Code 1},",
-						"          {Product ID} = sample_data_south.{Product ID},",
-						"          Profit = sample_data_south.Profit,",
-						"          Quantity = sample_data_south.Quantity,",
-						"          Sales = sample_data_south.Sales,",
-						"          Segment = sample_data_south.Segment,",
-						"          {Ship Mode} = sample_data_south.{Shipping Method},",
-						"          {Source File}",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> FlattenJson",
-						"FlattenJson derive({Order Date} = toDate({Order Date},'dd/MM/yyyy'),",
-						"          {Ship Date} = toDate({Ship Date},'dd/MM/yyyy'),",
-						"          {Postal Code} = toString({Postal Code}),",
-						"          Quantity = toInteger(Quantity),",
-						"          Discount = toFloat(Discount),",
-						"          Profit = toFloat(Profit),",
-						"          Sales = toDouble(Sales)) ~> TransfomTypeJson",
-						"FilterUnwantedRows derive(Column_2 = toDate(Column_2),",
-						"          Column_3 = toDate(Column_3),",
-						"          Column_9 = toDouble(Column_9),",
-						"          Column_10 = toInteger(Column_10),",
-						"          Column_11 = toFloat(Column_11),",
-						"          Column_12 = toFloat(Column_12)) ~> TransformTypeXlsx2",
-						"TransformTypeXlsx2 select(mapColumn(",
-						"          {Order ID} = Column_1,",
-						"          {Order Date} = Column_2,",
-						"          {Ship Date} = Column_3,",
-						"          {Ship Mode} = Column_4,",
-						"          {Customer ID} = Column_5,",
-						"          Segment = Column_6,",
-						"          {Postal Code} = Column_7,",
-						"          {Product ID} = Column_8,",
-						"          Sales = Column_9,",
-						"          Quantity = Column_10,",
-						"          Discount = Column_11,",
-						"          Profit = Column_12,",
-						"          {Source File}",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RenameXlsx2Columns",
-						"TransfomTypeJson select(mapColumn(",
-						"          {Customer ID},",
-						"          {Order Date},",
-						"          {Ship Date},",
-						"          Discount,",
-						"          {Order ID},",
-						"          {Postal Code},",
-						"          {Product ID},",
-						"          Profit,",
-						"          Quantity,",
-						"          Sales,",
-						"          Segment,",
-						"          {Ship Mode},",
-						"          {Source File}",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RemoveDuplicatesJson",
-						"union1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     store: 'cache',",
-						"     format: 'inline',",
-						"     output: false,",
-						"     saveOrder: 1) ~> sink1"
-					]
+					"schema": "dbo",
+					"table": "Companies"
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DelimitedText1')]",
-				"[concat(variables('factoryId'), '/datasets/SourceDataset_lpx')]",
-				"[concat(variables('factoryId'), '/datasets/Json2')]",
-				"[concat(variables('factoryId'), '/datasets/Excel1')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/CopyPipeline_lpx')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/PostalCodesExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
-					{
-						"name": "Data flow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "FlattenJson",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dataflow1",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"Csv": {},
-									"Xlsx1": {},
-									"Json": {},
-									"Xlsx2": {},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "97fef0d2-5268-4814-9a0c-abd2a3e70364"
-							}
-						}
-					},
-					{
-						"name": "FlattenJson",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobStorageReadSettings",
-									"recursive": true,
-									"wildcardFolderPath": "JSON_Format",
-									"wildcardFileName": "*.json",
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"sink": {
-								"type": "JsonSink",
-								"storeSettings": {
-									"type": "AzureBlobStorageWriteSettings",
-									"copyBehavior": "PreserveHierarchy"
-								},
-								"formatSettings": {
-									"type": "JsonWriteSettings",
-									"filePattern": "setOfObjects"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "Json1",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "Json1",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"lastPublishTime": "2022-06-10T10:24:06Z"
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "postal_codes",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "group_reference_data.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "postal_code",
+						"type": "String"
+					},
+					{
+						"name": "state",
+						"type": "String"
+					},
+					{
+						"name": "region",
+						"type": "String"
+					},
+					{
+						"name": "country",
+						"type": "String"
+					}
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]",
-				"[concat(variables('factoryId'), '/datasets/Json1')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PostalCodesSQL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Postal_Code",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "State",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Region",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country_Region",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Postal_Code"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductTypesExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "product_types",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "group_reference_data.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "product_type",
+						"type": "String"
+					},
+					{
+						"name": "product_category",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductTypesSQL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Product_type",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Product_Category",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Product_Types"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		}
 	]

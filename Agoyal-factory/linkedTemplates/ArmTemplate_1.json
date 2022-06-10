@@ -1,0 +1,1167 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "Agoyal-factory"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductsExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "products",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "group_reference_data.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "product_id",
+						"type": "String"
+					},
+					{
+						"name": "product_name",
+						"type": "String"
+					},
+					{
+						"name": "category",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductsSQL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Product_ID",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Product_Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Category",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Products"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CompaniesExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "companies",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "group_reference_data.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "company_id",
+						"type": "String"
+					},
+					{
+						"name": "company",
+						"type": "String"
+					},
+					{
+						"name": "contact",
+						"type": "String"
+					},
+					{
+						"name": "region",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DelimitedText1",
+								"type": "DatasetReference"
+							},
+							"name": "Csv"
+						},
+						{
+							"dataset": {
+								"referenceName": "SourceDataset_lpx",
+								"type": "DatasetReference"
+							},
+							"name": "Xlsx1"
+						},
+						{
+							"dataset": {
+								"referenceName": "Json2",
+								"type": "DatasetReference"
+							},
+							"name": "Json"
+						},
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "Xlsx2"
+						}
+					],
+					"sinks": [
+						{
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RenameCsvColumns"
+						},
+						{
+							"name": "RenameXlsxColumns"
+						},
+						{
+							"name": "FilterUnwantedRows"
+						},
+						{
+							"name": "union1"
+						},
+						{
+							"name": "FlattenJson"
+						},
+						{
+							"name": "TransfomTypeJson"
+						},
+						{
+							"name": "TransformTypeXlsx2"
+						},
+						{
+							"name": "RenameXlsx2Columns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          order_number as string,",
+						"          ord_date as date 'dd/MM/yyyy',",
+						"          ship_date as date 'dd/MM/yyyy',",
+						"          ship_type as string,",
+						"          customer_key as string,",
+						"          customer_section as string,",
+						"          post_code as string,",
+						"          product_id as string,",
+						"          sales as double,",
+						"          {#_items} as integer,",
+						"          reduction as float,",
+						"          total as float",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     rowUrlColumn: 'Source File') ~> Csv",
+						"source(output(",
+						"          {Order ID} as string,",
+						"          {Order Date} as date 'dd/MM/yyyy',",
+						"          {Ship Date} as date 'dd/MM/yyyy',",
+						"          {Ship Mode} as string,",
+						"          {Customer ID} as string,",
+						"          Segment as string,",
+						"          {Postal Code} as string,",
+						"          {Product ID} as string,",
+						"          Sales as double,",
+						"          Quantity as integer,",
+						"          Discount as float,",
+						"          Profit as float",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     rowUrlColumn: 'Source File') ~> Xlsx1",
+						"source(output(",
+						"          sample_data_south as (Order as string, Date as string, {Date Shipped} as string, {Shipping Method} as string, {Customer Number} as string, Segment as string, {Postal Code 1} as string, {Product ID} as string, Sales as string, Quantity as string, Discount as string, Profit as string)[]",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     rowUrlColumn: 'Source File',",
+						"     documentForm: 'arrayOfDocuments') ~> Json",
+						"source(output(",
+						"          Column_1 as string,",
+						"          Column_2 as string,",
+						"          Column_3 as string,",
+						"          Column_4 as string,",
+						"          Column_5 as string,",
+						"          Column_6 as string,",
+						"          Column_7 as string,",
+						"          Column_8 as string,",
+						"          Column_9 as string,",
+						"          Column_10 as string,",
+						"          Column_11 as string,",
+						"          Column_12 as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     rowUrlColumn: 'Source File') ~> Xlsx2",
+						"Csv select(mapColumn(",
+						"          {Order ID} = order_number,",
+						"          {Order Date} = ord_date,",
+						"          {Ship Date} = ship_date,",
+						"          {Ship Mode} = ship_type,",
+						"          {Customer ID} = customer_key,",
+						"          Segment = customer_section,",
+						"          {Postal Code} = post_code,",
+						"          {Product ID} = product_id,",
+						"          Sales = sales,",
+						"          Quantity = {#_items},",
+						"          Discount = reduction,",
+						"          Profit = total,",
+						"          {Source File}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameCsvColumns",
+						"Xlsx1 select(mapColumn(",
+						"          {Order ID},",
+						"          {Order Date},",
+						"          {Ship Date},",
+						"          {Ship Mode},",
+						"          {Customer ID},",
+						"          Segment,",
+						"          {Postal Code},",
+						"          {Product ID},",
+						"          Sales,",
+						"          Quantity,",
+						"          Discount,",
+						"          Profit,",
+						"          {Source File}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameXlsxColumns",
+						"Xlsx2 filter(!isNull({Column_1}) && !isNull({Column_2}) && !isNull({Column_3}) && !isNull({Column_4}) && !isNull({Column_5}) && !isNull({Column_6}) && !isNull({Column_7}) && !isNull({Column_8}) && !isNull({Column_9}) && !isNull({Column_10}) && !isNull({Column_11}) && isDouble({Column_12})) ~> FilterUnwantedRows",
+						"RenameCsvColumns, RenameXlsxColumns, TransfomTypeJson, RenameXlsx2Columns union(byName: true)~> union1",
+						"Json foldDown(unroll(sample_data_south),",
+						"     mapColumn(",
+						"          {Customer ID} = sample_data_south.{Customer Number},",
+						"          {Order Date} = sample_data_south.Date,",
+						"          {Ship Date} = sample_data_south.{Date Shipped},",
+						"          Discount = sample_data_south.Discount,",
+						"          {Order ID} = sample_data_south.Order,",
+						"          {Postal Code} = sample_data_south.{Postal Code 1},",
+						"          {Product ID} = sample_data_south.{Product ID},",
+						"          Profit = sample_data_south.Profit,",
+						"          Quantity = sample_data_south.Quantity,",
+						"          Sales = sample_data_south.Sales,",
+						"          Segment = sample_data_south.Segment,",
+						"          {Ship Mode} = sample_data_south.{Shipping Method},",
+						"          {Source File}",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> FlattenJson",
+						"FlattenJson derive({Order Date} = toDate({Order Date},'dd/MM/yyyy'),",
+						"          {Ship Date} = toDate({Ship Date},'dd/MM/yyyy'),",
+						"          {Postal Code} = toString({Postal Code}),",
+						"          Quantity = toInteger(Quantity),",
+						"          Discount = toFloat(Discount),",
+						"          Profit = toFloat(Profit),",
+						"          Sales = toDouble(Sales)) ~> TransfomTypeJson",
+						"FilterUnwantedRows derive(Column_2 = toDate(Column_2),",
+						"          Column_3 = toDate(Column_3),",
+						"          Column_9 = toDouble(Column_9),",
+						"          Column_10 = toInteger(Column_10),",
+						"          Column_11 = toFloat(Column_11),",
+						"          Column_12 = toFloat(Column_12)) ~> TransformTypeXlsx2",
+						"TransformTypeXlsx2 select(mapColumn(",
+						"          {Order ID} = Column_1,",
+						"          {Order Date} = Column_2,",
+						"          {Ship Date} = Column_3,",
+						"          {Ship Mode} = Column_4,",
+						"          {Customer ID} = Column_5,",
+						"          Segment = Column_6,",
+						"          {Postal Code} = Column_7,",
+						"          {Product ID} = Column_8,",
+						"          Sales = Column_9,",
+						"          Quantity = Column_10,",
+						"          Discount = Column_11,",
+						"          Profit = Column_12,",
+						"          {Source File}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameXlsx2Columns",
+						"union1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CompaniesMetadata')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "CompaniesExcel",
+								"type": "DatasetReference"
+							},
+							"name": "ReadCompaniesSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "CompaniesSQL",
+								"type": "DatasetReference"
+							},
+							"name": "ReadCompaniesLoaded"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "CompaniesSQL",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CheckforDuplicatesCompanies"
+						},
+						{
+							"name": "CheckCompaniesUpdate"
+						},
+						{
+							"name": "MarkCompanies"
+						},
+						{
+							"name": "TransformTypeCompanies"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          company_id as string,",
+						"          company as string,",
+						"          contact as string,",
+						"          region as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false) ~> ReadCompaniesSource",
+						"source(output(",
+						"          Company_ID as integer,",
+						"          Company as string,",
+						"          Contact as string,",
+						"          Region as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ReadCompaniesLoaded",
+						"ReadCompaniesSource aggregate(groupBy(company_id,",
+						"          company,",
+						"          contact,",
+						"          region),",
+						"     Dummy = sum(1)) ~> CheckforDuplicatesCompanies",
+						"TransformTypeCompanies, ReadCompaniesLoaded join(TransformTypeCompanies@company_id == ReadCompaniesLoaded@Company_ID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> CheckCompaniesUpdate",
+						"CheckCompaniesUpdate alterRow(updateIf(TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region),",
+						"     insertIf(isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region))) ~> MarkCompanies",
+						"CheckforDuplicatesCompanies derive(company_id = toInteger(company_id)) ~> TransformTypeCompanies",
+						"MarkCompanies sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          Company_ID as integer,",
+						"          Company as string,",
+						"          Contact as string,",
+						"          Region as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['Company_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Company_ID = TransformTypeCompanies@company_id,",
+						"          Company = CheckforDuplicatesCompanies@company,",
+						"          Contact = CheckforDuplicatesCompanies@contact,",
+						"          Region = CheckforDuplicatesCompanies@region",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/CompaniesExcel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PostalCodesMetadata')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "PostalCodesExcel",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "PostalCodesSQL",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSQL"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "PostalCodesSQL",
+								"type": "DatasetReference"
+							},
+							"name": "InsertinSQL"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CheckforDuplicates"
+						},
+						{
+							"name": "MergeSources"
+						},
+						{
+							"name": "MarkUpdates"
+						},
+						{
+							"name": "TransformType"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          postal_code as string,",
+						"          state as string,",
+						"          region as string,",
+						"          country as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false) ~> ReadSource",
+						"source(output(",
+						"          Postal_Code as integer,",
+						"          State as string,",
+						"          Region as string,",
+						"          Country_Region as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ReadSQL",
+						"ReadSource aggregate(groupBy(postal_code,",
+						"          state,",
+						"          region,",
+						"          country),",
+						"     Dummy = sum(1)) ~> CheckforDuplicates",
+						"TransformType, ReadSQL join(TransformType@postal_code == ReadSQL@Postal_Code,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> MergeSources",
+						"MergeSources alterRow(updateIf(TransformType@postal_code != ReadSQL@Postal_Code || CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region),",
+						"     insertIf(isNull(ReadSQL@Postal_Code) && isNull(ReadSQL@State) && isNull(ReadSQL@Region) && isNull(ReadSQL@Country))) ~> MarkUpdates",
+						"CheckforDuplicates derive(postal_code = toInteger(postal_code),",
+						"          Country_Region = case(region == 'East', 'Eastern US', case(region == 'West', 'Western US', case(region == 'Central', 'Central US', case(region == 'South', 'Southern US', ''))))) ~> TransformType",
+						"MarkUpdates sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          Postal_Code as integer,",
+						"          State as string,",
+						"          Region as string,",
+						"          Country_Region as string,",
+						"          Country as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['Postal_Code'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Postal_Code = TransformType@postal_code,",
+						"          State = CheckforDuplicates@state,",
+						"          Region = CheckforDuplicates@region,",
+						"          Country = CheckforDuplicates@country,",
+						"          Country_Region = TransformType@Country_Region",
+						"     )) ~> InsertinSQL"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductTypesMetadata')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ProductsExcel",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "ProductsSQL",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSQL"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ProductsSQL",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CheckforDuplicates"
+						},
+						{
+							"name": "MergeSources"
+						},
+						{
+							"name": "MarkUpdates"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          product_id as string,",
+						"          product_name as string,",
+						"          category as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false) ~> ReadSource",
+						"source(output(",
+						"          Product_ID as string,",
+						"          Product_Name as string,",
+						"          Category as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ReadSQL",
+						"ReadSource aggregate(groupBy(product_id,",
+						"          product_name,",
+						"          category),",
+						"     Dummy = sum(1)) ~> CheckforDuplicates",
+						"CheckforDuplicates, ReadSQL join(CheckforDuplicates@product_id == ReadSQL@Product_ID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> MergeSources",
+						"MergeSources alterRow(updateIf(CheckforDuplicates@product_id != ReadSQL@Product_ID || CheckforDuplicates@product_name != ReadSQL@Product_Name || CheckforDuplicates@category != ReadSQL@Category),",
+						"     insertIf(isNull(ReadSQL@Product_ID) && isNull(ReadSQL@Product_Name) && isNull(ReadSQL@Category))) ~> MarkUpdates",
+						"MarkUpdates sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          Product_ID as string,",
+						"          Product_Name as string,",
+						"          Category as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['Product_ID'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Product_ID = CheckforDuplicates@product_id,",
+						"          Product_Name = CheckforDuplicates@product_name,",
+						"          Category = CheckforDuplicates@category",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ProductsExcel')]",
+				"[concat(variables('factoryId'), '/datasets/ProductsSQL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductsMetadata')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ProductTypesExcel",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "ProductTypesSQL",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSQL"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ProductTypesSQL",
+								"type": "DatasetReference"
+							},
+							"name": "InsertinSQL"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CheckforDuplicates"
+						},
+						{
+							"name": "MergeSources"
+						},
+						{
+							"name": "MarkUpdates"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          product_type as string,",
+						"          product_category as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false) ~> ReadSource",
+						"source(output(",
+						"          Product_type as string,",
+						"          Product_Category as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> ReadSQL",
+						"ReadSource aggregate(groupBy(product_type,",
+						"          product_category),",
+						"     Dummy = sum(1)) ~> CheckforDuplicates",
+						"CheckforDuplicates, ReadSQL join(CheckforDuplicates@product_type == ReadSQL@Product_type,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> MergeSources",
+						"MergeSources alterRow(updateIf(CheckforDuplicates@product_type != ReadSQL@Product_type || CheckforDuplicates@product_category != ReadSQL@Product_Category),",
+						"     insertIf(isNull(ReadSQL@Product_type) && isNull(ReadSQL@Product_Category))) ~> MarkUpdates",
+						"MarkUpdates sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          Product_type as string,",
+						"          Product_Category as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['Product_type'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Product_type = CheckforDuplicates@product_type,",
+						"          Product_Category = CheckforDuplicates@product_category",
+						"     )) ~> InsertinSQL"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CopyPipeline_lpx')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Csv": {},
+									"Xlsx1": {},
+									"Json": {},
+									"Xlsx2": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "97fef0d2-5268-4814-9a0c-abd2a3e70364"
+							}
+						}
+					},
+					{
+						"name": "FlattenJson",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": "JSON_Format",
+									"wildcardFileName": "*.json",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Order']"
+										},
+										"sink": {
+											"ordinal": 1
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Date']"
+										},
+										"sink": {
+											"ordinal": 2
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Date Shipped']"
+										},
+										"sink": {
+											"ordinal": 3
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Shipping Method']"
+										},
+										"sink": {
+											"ordinal": 4
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Customer Number']"
+										},
+										"sink": {
+											"ordinal": 5
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Segment']"
+										},
+										"sink": {
+											"ordinal": 6
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Postal Code 1']"
+										},
+										"sink": {
+											"ordinal": 7
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Product ID']"
+										},
+										"sink": {
+											"ordinal": 8
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Sales']"
+										},
+										"sink": {
+											"ordinal": 9
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Quantity']"
+										},
+										"sink": {
+											"ordinal": 10
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Discount']"
+										},
+										"sink": {
+											"ordinal": 11
+										}
+									},
+									{
+										"source": {
+											"path": "$['sample_data_south'][0]['Profit']"
+										},
+										"sink": {
+											"ordinal": 12
+										}
+									}
+								],
+								"collectionReference": ""
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "Json1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DelimitedText2",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-06-10T10:24:06Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/UploadMetadata')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "UploadMetadataCompanies",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "CompaniesMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadCompaniesSource": {},
+									"ReadCompaniesLoaded": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "547efcd6-8021-40fa-ba44-141761b71db3"
+							}
+						}
+					},
+					{
+						"name": "UploadMetadataPostal_Codes",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "PostalCodesMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadSource": {},
+									"ReadSQL": {},
+									"InsertinSQL": {}
+								},
+								"linkedServiceParameters": {}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "fec7a2df-acad-4718-863a-cc543cc0e8ae"
+							}
+						}
+					},
+					{
+						"name": "UploadMetadataProduct_Types",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ProductTypesMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadSource": {},
+									"ReadSQL": {},
+									"sink1": {}
+								},
+								"linkedServiceParameters": {}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "602ea95f-4c7f-4b2a-b563-f4149eb93405"
+							}
+						}
+					},
+					{
+						"name": "UploadMetadataProducts",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "UploadMetadataProduct_Types",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ProductsMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadSource": {},
+									"ReadSQL": {},
+									"InsertinSQL": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "e55f37d1-44ba-439e-a4f3-839de1931779"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/CompaniesMetadata')]",
+				"[concat(variables('factoryId'), '/dataflows/PostalCodesMetadata')]",
+				"[concat(variables('factoryId'), '/dataflows/ProductTypesMetadata')]",
+				"[concat(variables('factoryId'), '/dataflows/ProductsMetadata')]"
+			]
+		}
+	]
+}
