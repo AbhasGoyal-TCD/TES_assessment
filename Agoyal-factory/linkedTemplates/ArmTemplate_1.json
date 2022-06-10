@@ -391,7 +391,7 @@
 								"referenceName": "CompaniesSQL",
 								"type": "DatasetReference"
 							},
-							"name": "sink1"
+							"name": "InsertinSQL"
 						}
 					],
 					"transformations": [
@@ -406,6 +406,9 @@
 						},
 						{
 							"name": "TransformTypeCompanies"
+						},
+						{
+							"name": "FilterExistingRows"
 						}
 					],
 					"scriptLines": [
@@ -417,10 +420,7 @@
 						"     ),",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false) ~> ReadCompaniesSource",
+						"     ignoreNoFilesFound: false) ~> ReadCompaniesSource",
 						"source(output(",
 						"          Company_ID as integer,",
 						"          Company as string,",
@@ -441,9 +441,11 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> CheckCompaniesUpdate",
-						"CheckCompaniesUpdate alterRow(updateIf(TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region),",
-						"     insertIf(isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region))) ~> MarkCompanies",
+						"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company != FilterExistingRows@Retain@Company || FilterExistingRows@Retain@contact != FilterExistingRows@Retain@Contact || FilterExistingRows@Retain@region != FilterExistingRows@Retain@Region)) ~> MarkCompanies",
 						"CheckforDuplicatesCompanies derive(company_id = toInteger(company_id)) ~> TransformTypeCompanies",
+						"CheckCompaniesUpdate split((TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region) \r",
+						"|| (isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region)),",
+						"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
 						"MarkCompanies sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -462,11 +464,11 @@
 						"     skipDuplicateMapOutputs: true,",
 						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
-						"          Company_ID = TransformTypeCompanies@company_id,",
-						"          Company = CheckforDuplicatesCompanies@company,",
-						"          Contact = CheckforDuplicatesCompanies@contact,",
-						"          Region = CheckforDuplicatesCompanies@region",
-						"     )) ~> sink1"
+						"          Company_ID = FilterExistingRows@Retain@company_id,",
+						"          Company = FilterExistingRows@Retain@company,",
+						"          Contact = FilterExistingRows@Retain@contact,",
+						"          Region = FilterExistingRows@Retain@region",
+						"     )) ~> InsertinSQL"
 					]
 				}
 			},
@@ -518,6 +520,9 @@
 						},
 						{
 							"name": "TransformType"
+						},
+						{
+							"name": "FilterExistingRows"
 						}
 					],
 					"scriptLines": [
@@ -554,10 +559,11 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> MergeSources",
-						"MergeSources alterRow(updateIf(TransformType@postal_code != ReadSQL@Postal_Code || CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region),",
-						"     insertIf(isNull(ReadSQL@Postal_Code) && isNull(ReadSQL@State) && isNull(ReadSQL@Region) && isNull(ReadSQL@Country))) ~> MarkUpdates",
+						"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@state != FilterExistingRows@Retain@State || FilterExistingRows@Retain@region != FilterExistingRows@Retain@Region || FilterExistingRows@Retain@country != FilterExistingRows@Retain@Country || FilterExistingRows@Retain@Country_Region != FilterExistingRows@Retain@Country_Region)) ~> MarkUpdates",
 						"CheckforDuplicates derive(postal_code = toInteger(postal_code),",
 						"          Country_Region = case(region == 'East', 'Eastern US', case(region == 'West', 'Western US', case(region == 'Central', 'Central US', case(region == 'South', 'Southern US', ''))))) ~> TransformType",
+						"MergeSources split((TransformType@postal_code != ReadSQL@Postal_Code || CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region) || (isNull(ReadSQL@Postal_Code) && isNull(ReadSQL@State) && isNull(ReadSQL@Region) && isNull(ReadSQL@Country)),",
+						"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
 						"MarkUpdates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -571,25 +577,18 @@
 						"     insertable:true,",
 						"     updateable:true,",
 						"     upsertable:false,",
-						"     keys:['Postal_Code'],",
+						"     keys:['postal_code'],",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError',",
-						"     mapColumn(",
-						"          Postal_Code = TransformType@postal_code,",
-						"          State = CheckforDuplicates@state,",
-						"          Region = CheckforDuplicates@region,",
-						"          Country = CheckforDuplicates@country,",
-						"          Country_Region = TransformType@Country_Region",
-						"     )) ~> InsertinSQL"
+						"     errorHandlingOption: 'stopOnFirstError') ~> InsertinSQL"
 					]
 				}
 			},
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ProductTypesMetadata')]",
+			"name": "[concat(parameters('factoryName'), '/ProductsMetadata')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -617,7 +616,7 @@
 								"referenceName": "ProductsSQL",
 								"type": "DatasetReference"
 							},
-							"name": "sink1"
+							"name": "InsertinSQL"
 						}
 					],
 					"transformations": [
@@ -629,6 +628,9 @@
 						},
 						{
 							"name": "MarkUpdates"
+						},
+						{
+							"name": "FilterExistingRows"
 						}
 					],
 					"scriptLines": [
@@ -639,10 +641,7 @@
 						"     ),",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
-						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false) ~> ReadSource",
+						"     ignoreNoFilesFound: false) ~> ReadSource",
 						"source(output(",
 						"          Product_ID as string,",
 						"          Product_Name as string,",
@@ -661,8 +660,9 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> MergeSources",
-						"MergeSources alterRow(updateIf(CheckforDuplicates@product_id != ReadSQL@Product_ID || CheckforDuplicates@product_name != ReadSQL@Product_Name || CheckforDuplicates@category != ReadSQL@Category),",
-						"     insertIf(isNull(ReadSQL@Product_ID) && isNull(ReadSQL@Product_Name) && isNull(ReadSQL@Category))) ~> MarkUpdates",
+						"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@product_name != FilterExistingRows@Retain@Product_Name || FilterExistingRows@Retain@category != FilterExistingRows@Retain@Category)) ~> MarkUpdates",
+						"MergeSources split((CheckforDuplicates@product_id != ReadSQL@Product_ID || CheckforDuplicates@product_name != ReadSQL@Product_Name || CheckforDuplicates@category != ReadSQL@Category) || (isNull(ReadSQL@Product_ID) && isNull(ReadSQL@Product_Name) && isNull(ReadSQL@Category)),",
+						"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
 						"MarkUpdates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -680,10 +680,10 @@
 						"     skipDuplicateMapOutputs: true,",
 						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
-						"          Product_ID = CheckforDuplicates@product_id,",
-						"          Product_Name = CheckforDuplicates@product_name,",
-						"          Category = CheckforDuplicates@category",
-						"     )) ~> sink1"
+						"          Product_ID = FilterExistingRows@Retain@product_id,",
+						"          Product_Name = FilterExistingRows@Retain@product_name,",
+						"          Category = FilterExistingRows@Retain@category",
+						"     )) ~> InsertinSQL"
 					]
 				}
 			},
@@ -693,7 +693,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ProductsMetadata')]",
+			"name": "[concat(parameters('factoryName'), '/ProductTypesMetadata')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -733,6 +733,9 @@
 						},
 						{
 							"name": "MarkUpdates"
+						},
+						{
+							"name": "FilterExistingRows"
 						}
 					],
 					"scriptLines": [
@@ -762,8 +765,9 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> MergeSources",
-						"MergeSources alterRow(updateIf(CheckforDuplicates@product_type != ReadSQL@Product_type || CheckforDuplicates@product_category != ReadSQL@Product_Category),",
-						"     insertIf(isNull(ReadSQL@Product_type) && isNull(ReadSQL@Product_Category))) ~> MarkUpdates",
+						"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@product_category != FilterExistingRows@Retain@Product_Category)) ~> MarkUpdates",
+						"MergeSources split((CheckforDuplicates@product_type != ReadSQL@Product_type || CheckforDuplicates@product_category != ReadSQL@Product_Category) || (isNull(ReadSQL@Product_type) && isNull(ReadSQL@Product_Category)),",
+						"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
 						"MarkUpdates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -780,8 +784,8 @@
 						"     skipDuplicateMapOutputs: true,",
 						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
-						"          Product_type = CheckforDuplicates@product_type,",
-						"          Product_Category = CheckforDuplicates@product_category",
+						"          Product_type = FilterExistingRows@Retain@product_type,",
+						"          Product_Category = FilterExistingRows@Retain@product_category",
 						"     )) ~> InsertinSQL"
 					]
 				}
@@ -1007,7 +1011,14 @@
 					{
 						"name": "UploadMetadataCompanies",
 						"type": "ExecuteDataFlow",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "UploadMetadataProduct_Types",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "1.00:00:00",
 							"retry": 0,
@@ -1024,7 +1035,7 @@
 								"datasetParameters": {
 									"ReadCompaniesSource": {},
 									"ReadCompaniesLoaded": {},
-									"sink1": {}
+									"InsertinSQL": {}
 								}
 							},
 							"staging": {},
@@ -1032,10 +1043,7 @@
 								"coreCount": 8,
 								"computeType": "General"
 							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "547efcd6-8021-40fa-ba44-141761b71db3"
-							}
+							"traceLevel": "Fine"
 						}
 					},
 					{
@@ -1069,12 +1077,44 @@
 							},
 							"traceLevel": "Fine",
 							"continuationSettings": {
-								"customizedCheckpointKey": "fec7a2df-acad-4718-863a-cc543cc0e8ae"
+								"customizedCheckpointKey": "00d02c52-5732-47d2-9765-baf5bf378ef7"
 							}
 						}
 					},
 					{
 						"name": "UploadMetadataProduct_Types",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ProductsMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadSource": {},
+									"ReadSQL": {},
+									"InsertinSQL": {}
+								},
+								"linkedServiceParameters": {}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "UploadMetadataProducts",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -1093,48 +1133,6 @@
 								"datasetParameters": {
 									"ReadSource": {},
 									"ReadSQL": {},
-									"sink1": {}
-								},
-								"linkedServiceParameters": {}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "602ea95f-4c7f-4b2a-b563-f4149eb93405"
-							}
-						}
-					},
-					{
-						"name": "UploadMetadataProducts",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProduct_Types",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ProductsMetadata",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"ReadSQL": {},
 									"InsertinSQL": {}
 								}
 							},
@@ -1145,7 +1143,7 @@
 							},
 							"traceLevel": "Fine",
 							"continuationSettings": {
-								"customizedCheckpointKey": "e55f37d1-44ba-439e-a4f3-839de1931779"
+								"customizedCheckpointKey": "1f2de74f-abbe-4e29-a2b3-262248634076"
 							}
 						}
 					}
@@ -1159,8 +1157,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/CompaniesMetadata')]",
 				"[concat(variables('factoryId'), '/dataflows/PostalCodesMetadata')]",
-				"[concat(variables('factoryId'), '/dataflows/ProductTypesMetadata')]",
-				"[concat(variables('factoryId'), '/dataflows/ProductsMetadata')]"
+				"[concat(variables('factoryId'), '/dataflows/ProductsMetadata')]",
+				"[concat(variables('factoryId'), '/dataflows/ProductTypesMetadata')]"
 			]
 		}
 	]
