@@ -30,23 +30,13 @@
 						"coreCount": 8,
 						"computeType": "General"
 					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "2f77c785-4c17-42ae-a0cc-9af0881d4571"
-					}
+					"traceLevel": "Fine"
 				}
 			},
 			{
 				"name": "UploadMetadataPostal_Codes",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "UploadMetadataProduct_Types",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
@@ -84,7 +74,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "ProductTypesMetadata",
+						"referenceName": "ProductsMetadata",
 						"type": "DataFlowReference"
 					},
 					"compute": {
@@ -97,14 +87,7 @@
 			{
 				"name": "UploadMetadataProducts",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "UploadMetadataProduct_Types",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
@@ -115,7 +98,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "ProductsMetadata",
+						"referenceName": "ProductTypesMetadata",
 						"type": "DataFlowReference"
 					},
 					"compute": {
@@ -124,7 +107,7 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "49d36e90-e1f2-4c5c-910e-2b49d674f82b"
+						"customizedCheckpointKey": "9c4fd2e4-f598-417a-9143-264cd5c6946a"
 					}
 				}
 			}
