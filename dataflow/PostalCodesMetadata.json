@@ -25,7 +25,7 @@
 						"referenceName": "PostalCodesSQL",
 						"type": "DatasetReference"
 					},
-					"name": "InsertinSQL"
+					"name": "sink1"
 				}
 			],
 			"transformations": [
@@ -40,6 +40,9 @@
 				},
 				{
 					"name": "TransformType"
+				},
+				{
+					"name": "FilterExistingRows"
 				}
 			],
 			"scriptLines": [
@@ -76,10 +79,11 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> MergeSources",
-				"MergeSources alterRow(updateIf(TransformType@postal_code != ReadSQL@Postal_Code || CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region),",
-				"     insertIf(isNull(ReadSQL@Postal_Code) && isNull(ReadSQL@State) && isNull(ReadSQL@Region) && isNull(ReadSQL@Country))) ~> MarkUpdates",
+				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@postal_code != FilterExistingRows@Retain@Postal_Code || FilterExistingRows@Retain@state != FilterExistingRows@Retain@State || FilterExistingRows@Retain@region != FilterExistingRows@Retain@Region || FilterExistingRows@Retain@country != FilterExistingRows@Retain@Country || FilterExistingRows@Retain@Country_Region != FilterExistingRows@Retain@Country_Region)) ~> MarkUpdates",
 				"CheckforDuplicates derive(postal_code = toInteger(postal_code),",
 				"          Country_Region = case(region == 'East', 'Eastern US', case(region == 'West', 'Western US', case(region == 'Central', 'Central US', case(region == 'South', 'Southern US', ''))))) ~> TransformType",
+				"MergeSources split((TransformType@postal_code != ReadSQL@Postal_Code || CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region) || (isNull(ReadSQL@Postal_Code) && isNull(ReadSQL@State) && isNull(ReadSQL@Region) && isNull(ReadSQL@Country)),",
+				"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
 				"MarkUpdates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -93,18 +97,11 @@
 				"     insertable:true,",
 				"     updateable:true,",
 				"     upsertable:false,",
-				"     keys:['Postal_Code'],",
+				"     keys:['postal_code'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
-				"     mapColumn(",
-				"          Postal_Code = TransformType@postal_code,",
-				"          State = CheckforDuplicates@state,",
-				"          Region = CheckforDuplicates@region,",
-				"          Country = CheckforDuplicates@country,",
-				"          Country_Region = TransformType@Country_Region",
-				"     )) ~> InsertinSQL"
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
 			]
 		}
 	}
