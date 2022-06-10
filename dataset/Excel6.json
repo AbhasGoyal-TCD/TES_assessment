@@ -1,0 +1,38 @@
+{
+	"name": "Excel6",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "companies",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "group_reference_data.xlsx",
+				"container": "tesmetadata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "company_id",
+				"type": "String"
+			},
+			{
+				"name": "company",
+				"type": "String"
+			},
+			{
+				"name": "contact",
+				"type": "String"
+			},
+			{
+				"name": "region",
+				"type": "String"
+			}
+		]
+	}
+}

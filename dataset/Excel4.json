@@ -1,0 +1,30 @@
+{
+	"name": "Excel4",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "product_types",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "group_reference_data.xlsx",
+				"container": "tesmetadata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "product_type",
+				"type": "String"
+			},
+			{
+				"name": "product_category",
+				"type": "String"
+			}
+		]
+	}
+}
