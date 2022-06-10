@@ -25,7 +25,7 @@
 						"referenceName": "CompaniesSQL",
 						"type": "DatasetReference"
 					},
-					"name": "sink1"
+					"name": "InsertinSQL"
 				}
 			],
 			"transformations": [
@@ -40,6 +40,9 @@
 				},
 				{
 					"name": "TransformTypeCompanies"
+				},
+				{
+					"name": "FilterExistingRows"
 				}
 			],
 			"scriptLines": [
@@ -75,9 +78,11 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> CheckCompaniesUpdate",
-				"CheckCompaniesUpdate alterRow(updateIf(TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region),",
-				"     insertIf(isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region))) ~> MarkCompanies",
+				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company_id != FilterExistingRows@Retain@Company_ID || FilterExistingRows@Retain@company != FilterExistingRows@Retain@Company || FilterExistingRows@Retain@contact != FilterExistingRows@Retain@Contact || FilterExistingRows@Retain@region != FilterExistingRows@Retain@Region)) ~> MarkCompanies",
 				"CheckforDuplicatesCompanies derive(company_id = toInteger(company_id)) ~> TransformTypeCompanies",
+				"CheckCompaniesUpdate split((TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region) \r",
+				"|| (isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region)),",
+				"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
 				"MarkCompanies sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -90,17 +95,17 @@
 				"     insertable:true,",
 				"     updateable:true,",
 				"     upsertable:false,",
-				"     keys:['Company_ID'],",
+				"     keys:['company_id'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          Company_ID = TransformTypeCompanies@company_id,",
-				"          Company = CheckforDuplicatesCompanies@company,",
-				"          Contact = CheckforDuplicatesCompanies@contact,",
-				"          Region = CheckforDuplicatesCompanies@region",
-				"     )) ~> sink1"
+				"          Company_ID = FilterExistingRows@Retain@company_id,",
+				"          Company = FilterExistingRows@Retain@company,",
+				"          Contact = FilterExistingRows@Retain@contact,",
+				"          Region = FilterExistingRows@Retain@region",
+				"     )) ~> InsertinSQL"
 			]
 		}
 	}
