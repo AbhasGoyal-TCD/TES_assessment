@@ -69,7 +69,7 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> MergeSources",
-				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@product_type != FilterExistingRows@Retain@Product_type || FilterExistingRows@Retain@product_category != FilterExistingRows@Retain@Product_Category)) ~> MarkUpdates",
+				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@product_category != FilterExistingRows@Retain@Product_Category)) ~> MarkUpdates",
 				"MergeSources split((CheckforDuplicates@product_type != ReadSQL@Product_type || CheckforDuplicates@product_category != ReadSQL@Product_Category) || (isNull(ReadSQL@Product_type) && isNull(ReadSQL@Product_Category)),",
 				"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
 				"MarkUpdates sink(allowSchemaDrift: false,",
