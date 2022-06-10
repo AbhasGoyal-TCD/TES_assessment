@@ -1,0 +1,69 @@
+{
+	"name": "Json2",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "superstore_south_sales.json",
+				"folderPath": "JSON_Format",
+				"container": "tes-rawdata"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"sample_data_south": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"Order": {
+								"type": "string"
+							},
+							"Date": {
+								"type": "string"
+							},
+							"Date Shipped": {
+								"type": "string"
+							},
+							"Shipping Method": {
+								"type": "string"
+							},
+							"Customer Number": {
+								"type": "string"
+							},
+							"Segment": {
+								"type": "string"
+							},
+							"Postal Code 1": {
+								"type": "string"
+							},
+							"Product ID": {
+								"type": "string"
+							},
+							"Sales": {
+								"type": "string"
+							},
+							"Quantity": {
+								"type": "string"
+							},
+							"Discount": {
+								"type": "string"
+							},
+							"Profit": {
+								"type": "string"
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

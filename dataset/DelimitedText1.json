@@ -1,0 +1,73 @@
+{
+	"name": "DelimitedText1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "CSV_files",
+				"container": "tes-rawdata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "order_number",
+				"type": "String"
+			},
+			{
+				"name": "ord_date",
+				"type": "String"
+			},
+			{
+				"name": "ship_date",
+				"type": "String"
+			},
+			{
+				"name": "ship_type",
+				"type": "String"
+			},
+			{
+				"name": "customer_key",
+				"type": "String"
+			},
+			{
+				"name": "customer_section",
+				"type": "String"
+			},
+			{
+				"name": "post_code",
+				"type": "String"
+			},
+			{
+				"name": "product_id",
+				"type": "String"
+			},
+			{
+				"name": "sales",
+				"type": "String"
+			},
+			{
+				"name": "#_items",
+				"type": "String"
+			},
+			{
+				"name": "reduction",
+				"type": "String"
+			},
+			{
+				"name": "total",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

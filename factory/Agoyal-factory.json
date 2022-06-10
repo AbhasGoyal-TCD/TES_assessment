@@ -1,0 +1,9 @@
+{
+	"name": "Agoyal-factory",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "ec2ac6c5-40b5-4b04-aa7c-94c7f5cbf6dd",
+		"tenantId": "d595be8d-b306-45f4-8064-9e5b82fbe52b"
+	}
+}
