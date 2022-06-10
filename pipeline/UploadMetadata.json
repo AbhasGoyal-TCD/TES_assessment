@@ -5,14 +5,7 @@
 			{
 				"name": "UploadMetadataCompanies",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "UploadMetadataProduct_Types",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
@@ -54,10 +47,7 @@
 						"coreCount": 8,
 						"computeType": "General"
 					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "00d02c52-5732-47d2-9765-baf5bf378ef7"
-					}
+					"traceLevel": "Fine"
 				}
 			},
 			{
@@ -87,7 +77,14 @@
 			{
 				"name": "UploadMetadataProducts",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProduct_Types",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
@@ -105,10 +102,7 @@
 						"coreCount": 8,
 						"computeType": "General"
 					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "9c4fd2e4-f598-417a-9143-264cd5c6946a"
-					}
+					"traceLevel": "Fine"
 				}
 			}
 		],
