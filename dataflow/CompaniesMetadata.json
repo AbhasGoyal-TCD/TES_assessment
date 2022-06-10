@@ -1,19 +1,19 @@
 {
-	"name": "dataflow2",
+	"name": "CompaniesMetadata",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "Excel6",
+						"referenceName": "CompaniesExcel",
 						"type": "DatasetReference"
 					},
 					"name": "ReadCompaniesSource"
 				},
 				{
 					"dataset": {
-						"referenceName": "AzureSqlTable2",
+						"referenceName": "CompaniesSQL",
 						"type": "DatasetReference"
 					},
 					"name": "ReadCompaniesLoaded"
@@ -22,7 +22,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "AzureSqlTable2",
+						"referenceName": "CompaniesSQL",
 						"type": "DatasetReference"
 					},
 					"name": "InsertinSQLCompanies"

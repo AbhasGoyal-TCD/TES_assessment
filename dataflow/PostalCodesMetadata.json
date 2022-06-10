@@ -1,0 +1,30 @@
+{
+	"name": "PostalCodesMetadata",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "PostalCodesExcel",
+						"type": "DatasetReference"
+					},
+					"name": "ReadPostalCodesSource"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          postal_code as string,",
+				"          state as string,",
+				"          region as string,",
+				"          country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ReadPostalCodesSource"
+			]
+		}
+	}
+}

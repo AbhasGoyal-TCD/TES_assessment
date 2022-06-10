@@ -1,5 +1,5 @@
 {
-	"name": "Excel5",
+	"name": "ProductsExcel",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureBlobStorage1",
