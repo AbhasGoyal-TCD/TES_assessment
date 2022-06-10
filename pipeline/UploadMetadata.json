@@ -25,7 +25,7 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "767c42b0-281d-46d0-9e10-0c41f4219b87"
+						"customizedCheckpointKey": "3f239e76-9785-448c-bc0e-eaa838093525"
 					}
 				}
 			},
@@ -42,10 +42,6 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "PostalCodesMetadata",
-						"type": "DataFlowReference"
-					},
 					"compute": {
 						"coreCount": 8,
 						"computeType": "General"

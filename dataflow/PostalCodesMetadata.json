@@ -1,0 +1,108 @@
+{
+	"name": "PostalCodesMetadata",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "PostalCodesExcel",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "PostalCodesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSQL"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "CompaniesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinSQL"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CheckforDuplicates"
+				},
+				{
+					"name": "MergeSources"
+				},
+				{
+					"name": "MarkUpdates"
+				},
+				{
+					"name": "TransformType"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          postal_code as string,",
+				"          state as string,",
+				"          region as string,",
+				"          country as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false) ~> ReadSource",
+				"source(output(",
+				"          Postal_Code as integer,",
+				"          State as string,",
+				"          Region as string,",
+				"          Country_Region as string,",
+				"          Country as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ReadSQL",
+				"ReadSource aggregate(groupBy(postal_code,",
+				"          state,",
+				"          region,",
+				"          country),",
+				"     Dummy = sum(1)) ~> CheckforDuplicates",
+				"TransformType, ReadSQL join(TransformType@postal_code == ReadSQL@Postal_Code,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeSources",
+				"MergeSources alterRow(updateIf(TransformType@postal_code != ReadSQL@Postal_Code || CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region),",
+				"     insertIf(isNull(ReadSQL@Postal_Code) && isNull(ReadSQL@State) && isNull(ReadSQL@Region) && isNull(ReadSQL@Country))) ~> MarkUpdates",
+				"CheckforDuplicates derive(postal_code = toInteger(postal_code),",
+				"          Country_Region = case(region == 'East', 'Eastern US', case(region == 'West', 'Western US', case(region == 'Central', 'Central US', case(region == 'South', 'Southern US', ''))))) ~> TransformType",
+				"MarkUpdates sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Company_ID as integer,",
+				"          Company as string,",
+				"          Contact as string,",
+				"          Region as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Company_ID = company_id,",
+				"          Company = company,",
+				"          Contact = contact,",
+				"          Region = region",
+				"     )) ~> InsertinSQL"
+			]
+		}
+	}
+}
