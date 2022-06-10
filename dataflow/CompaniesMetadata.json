@@ -25,7 +25,7 @@
 						"referenceName": "CompaniesSQL",
 						"type": "DatasetReference"
 					},
-					"name": "InsertinSQLCompanies"
+					"name": "sink1"
 				}
 			],
 			"transformations": [
@@ -90,16 +90,17 @@
 				"     insertable:true,",
 				"     updateable:true,",
 				"     upsertable:false,",
+				"     keys:['Company_ID'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          Company_ID = company_id,",
-				"          Company = company,",
-				"          Contact = contact,",
-				"          Region = region",
-				"     )) ~> InsertinSQLCompanies"
+				"          Company_ID = TransformTypeCompanies@company_id,",
+				"          Company = CheckforDuplicatesCompanies@company,",
+				"          Contact = CheckforDuplicatesCompanies@contact,",
+				"          Region = CheckforDuplicatesCompanies@region",
+				"     )) ~> sink1"
 			]
 		}
 	}
