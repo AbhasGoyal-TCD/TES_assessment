@@ -66,79 +66,14 @@
 						"type": "JsonSink",
 						"storeSettings": {
 							"type": "AzureBlobStorageWriteSettings",
-							"copyBehavior": "FlattenHierarchy"
+							"copyBehavior": "PreserveHierarchy"
 						},
 						"formatSettings": {
 							"type": "JsonWriteSettings",
 							"filePattern": "setOfObjects"
 						}
 					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Order']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Date']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Date Shipped']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Shipping Method']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Customer Number']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Segment']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Postal Code 1']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Product ID']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Sales']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Quantity']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Discount']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['sample_data_south'][0]['Profit']"
-								}
-							}
-						]
-					}
+					"enableStaging": false
 				},
 				"inputs": [
 					{
