@@ -95,7 +95,7 @@
 				"     insertable:true,",
 				"     updateable:true,",
 				"     upsertable:false,",
-				"     keys:['company_id'],",
+				"     keys:['Company_ID'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
