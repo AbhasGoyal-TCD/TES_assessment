@@ -62,9 +62,6 @@
 				},
 				{
 					"name": "RenameXlsx2Columns"
-				},
-				{
-					"name": "RemoveDuplicatesJson"
 				}
 			],
 			"scriptLines": [
@@ -177,7 +174,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> RenameXlsxColumns",
 				"Xlsx2 filter(!isNull({Column_1}) && !isNull({Column_2}) && !isNull({Column_3}) && !isNull({Column_4}) && !isNull({Column_5}) && !isNull({Column_6}) && !isNull({Column_7}) && !isNull({Column_8}) && !isNull({Column_9}) && !isNull({Column_10}) && !isNull({Column_11}) && isDouble({Column_12})) ~> FilterUnwantedRows",
-				"RenameCsvColumns, RenameXlsxColumns, RemoveDuplicatesJson, RenameXlsx2Columns union(byName: true)~> union1",
+				"RenameCsvColumns, RenameXlsxColumns, TransfomTypeJson, RenameXlsx2Columns union(byName: true)~> union1",
 				"Json foldDown(unroll(sample_data_south),",
 				"     mapColumn(",
 				"          {Customer ID} = sample_data_south.{Customer Number},",
@@ -226,23 +223,6 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> RenameXlsx2Columns",
-				"TransfomTypeJson select(mapColumn(",
-				"          {Customer ID},",
-				"          {Order Date},",
-				"          {Ship Date},",
-				"          Discount,",
-				"          {Order ID},",
-				"          {Postal Code},",
-				"          {Product ID},",
-				"          Profit,",
-				"          Quantity,",
-				"          Sales,",
-				"          Segment,",
-				"          {Ship Mode},",
-				"          {Source File}",
-				"     ),",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> RemoveDuplicatesJson",
 				"union1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     skipDuplicateMapInputs: true,",
