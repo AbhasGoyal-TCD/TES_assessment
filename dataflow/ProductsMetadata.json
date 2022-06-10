@@ -1,0 +1,99 @@
+{
+	"name": "ProductsMetadata",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ProductsExcel",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "ProductsSQL",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSQL"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ProductsSQL",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinSQL"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CheckforDuplicates"
+				},
+				{
+					"name": "MergeSources"
+				},
+				{
+					"name": "MarkUpdates"
+				},
+				{
+					"name": "FilterExistingRows"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          product_id as string,",
+				"          product_name as string,",
+				"          category as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> ReadSource",
+				"source(output(",
+				"          Product_ID as string,",
+				"          Product_Name as string,",
+				"          Category as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ReadSQL",
+				"ReadSource aggregate(groupBy(product_id,",
+				"          product_name,",
+				"          category),",
+				"     Dummy = sum(1)) ~> CheckforDuplicates",
+				"CheckforDuplicates, ReadSQL join(CheckforDuplicates@product_id == ReadSQL@Product_ID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeSources",
+				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@product_name != FilterExistingRows@Retain@Product_Name || FilterExistingRows@Retain@category != FilterExistingRows@Retain@Category)) ~> MarkUpdates",
+				"MergeSources split((CheckforDuplicates@product_id != ReadSQL@Product_ID || CheckforDuplicates@product_name != ReadSQL@Product_Name || CheckforDuplicates@category != ReadSQL@Category) || (isNull(ReadSQL@Product_ID) && isNull(ReadSQL@Product_Name) && isNull(ReadSQL@Category)),",
+				"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
+				"MarkUpdates sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Product_ID as string,",
+				"          Product_Name as string,",
+				"          Category as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['Product_ID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Product_ID = FilterExistingRows@Retain@product_id,",
+				"          Product_Name = FilterExistingRows@Retain@product_name,",
+				"          Category = FilterExistingRows@Retain@category",
+				"     )) ~> InsertinSQL"
+			]
+		}
+	}
+}
