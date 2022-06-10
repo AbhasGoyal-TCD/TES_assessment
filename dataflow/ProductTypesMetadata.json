@@ -1,0 +1,93 @@
+{
+	"name": "ProductTypesMetadata",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ProductTypesExcel",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "ProductTypesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSQL"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ProductTypesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinSQL"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CheckforDuplicates"
+				},
+				{
+					"name": "MergeSources"
+				},
+				{
+					"name": "MarkUpdates"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          product_type as string,",
+				"          product_category as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false) ~> ReadSource",
+				"source(output(",
+				"          Product_type as string,",
+				"          Product_Category as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ReadSQL",
+				"ReadSource aggregate(groupBy(product_type,",
+				"          product_category),",
+				"     Dummy = sum(1)) ~> CheckforDuplicates",
+				"CheckforDuplicates, ReadSQL join(CheckforDuplicates@product_type == ReadSQL@Product_type,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeSources",
+				"MergeSources alterRow(updateIf(CheckforDuplicates@product_type != ReadSQL@Product_type || CheckforDuplicates@product_category != ReadSQL@Product_Category),",
+				"     insertIf(isNull(ReadSQL@Product_type) && isNull(ReadSQL@Product_Category))) ~> MarkUpdates",
+				"MarkUpdates sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Product_type as string,",
+				"          Product_Category as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['Product_type'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Product_type = CheckforDuplicates@product_type,",
+				"          Product_Category = CheckforDuplicates@product_category",
+				"     )) ~> InsertinSQL"
+			]
+		}
+	}
+}
