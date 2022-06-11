@@ -27,7 +27,7 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "Excel1",
+						"referenceName": "CentralSource",
 						"type": "DatasetReference"
 					},
 					"name": "Xlsx2"
