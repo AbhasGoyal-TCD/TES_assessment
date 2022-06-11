@@ -70,7 +70,10 @@
 									"coreCount": 8,
 									"computeType": "General"
 								},
-								"traceLevel": "Fine"
+								"traceLevel": "Fine",
+								"continuationSettings": {
+									"customizedCheckpointKey": "ef152be8-52ec-4220-ac11-85376078cfe0"
+								}
 							}
 						}
 					]
@@ -224,7 +227,10 @@
 									"coreCount": 8,
 									"computeType": "General"
 								},
-								"traceLevel": "Fine"
+								"traceLevel": "Fine",
+								"continuationSettings": {
+									"customizedCheckpointKey": "7a95dc4d-1042-47de-8586-80766336a446"
+								}
 							}
 						}
 					]
@@ -254,9 +260,6 @@
 					"traceLevel": "None",
 					"cacheSinks": {
 						"firstRowOnly": true
-					},
-					"continuationSettings": {
-						"customizedCheckpointKey": "47503bed-c5d8-4447-b845-dee374b02c13"
 					}
 				}
 			},
@@ -274,7 +277,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(activity('LoadSouthSourceCount').output.RowCount,25)",
+						"value": "@equals(activity('LoadSouthSourceCount').output.runStatus.output.sink1.value[0].RowCount,25)",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
@@ -299,7 +302,10 @@
 									"coreCount": 8,
 									"computeType": "General"
 								},
-								"traceLevel": "Fine"
+								"traceLevel": "Fine",
+								"continuationSettings": {
+									"customizedCheckpointKey": "3a70aa30-07fa-4ac1-9bb7-ddea8494fed5"
+								}
 							}
 						}
 					]

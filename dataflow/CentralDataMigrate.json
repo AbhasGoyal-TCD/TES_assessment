@@ -179,6 +179,7 @@
 				"     errorHandlingOption: 'allErrors',",
 				"     outputRejectedData: true,",
 				"     rejectedData_container: 'tes-rawdata',",
+				"     rejectedData_folderPath: 'Rows_to_be_Fixed',",
 				"     transactionCommit: 'single',",
 				"     reportSuccessOnError: false,",
 				"     mapColumn(",

@@ -18,7 +18,11 @@
 						"referenceName": "SalesSQL",
 						"type": "DatasetReference"
 					},
-					"name": "InsertinSQL"
+					"name": "InsertinSQL",
+					"rejectedDataLinkedService": {
+						"referenceName": "AzureBlobStorage1",
+						"type": "LinkedServiceReference"
+					}
 				},
 				{
 					"dataset": {
@@ -172,7 +176,12 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
+				"     errorHandlingOption: 'allErrors',",
+				"     outputRejectedData: true,",
+				"     rejectedData_container: 'tes-rawdata',",
+				"     rejectedData_folderPath: 'Rows_to_be_Fixed',",
+				"     transactionCommit: 'single',",
+				"     reportSuccessOnError: false,",
 				"     mapColumn(",
 				"          Order_ID = {Order ID},",
 				"          Order_Date = {Order Date Converted},",
