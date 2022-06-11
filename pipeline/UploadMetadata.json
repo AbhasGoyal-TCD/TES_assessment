@@ -51,9 +51,16 @@
 				}
 			},
 			{
-				"name": "UploadMetadataProduct_Types",
+				"name": "UploadMetadataProducts",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProduct_Types",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
@@ -75,16 +82,9 @@
 				}
 			},
 			{
-				"name": "UploadMetadataProducts",
+				"name": "UploadMetadataProduct_Types",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "UploadMetadataProduct_Types",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "1.00:00:00",
 					"retry": 0,
