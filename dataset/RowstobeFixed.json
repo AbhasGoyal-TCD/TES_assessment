@@ -1,0 +1,71 @@
+{
+	"name": "RowstobeFixed",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "Error_Rows.xlsx",
+				"folderPath": "Rows_to_be_Fixed",
+				"container": "tes-rawdata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "Order_ID",
+				"type": "String"
+			},
+			{
+				"name": "Order_date",
+				"type": "String"
+			},
+			{
+				"name": "Ship_date",
+				"type": "String"
+			},
+			{
+				"name": "Ship_Mode",
+				"type": "String"
+			},
+			{
+				"name": "Customer_ID",
+				"type": "String"
+			},
+			{
+				"name": "Segment",
+				"type": "String"
+			},
+			{
+				"name": "Postal_Code",
+				"type": "String"
+			},
+			{
+				"name": "Product ID",
+				"type": "String"
+			},
+			{
+				"name": "Sales",
+				"type": "String"
+			},
+			{
+				"name": "Quantity",
+				"type": "String"
+			},
+			{
+				"name": "Discount",
+				"type": "String"
+			},
+			{
+				"name": "Profit",
+				"type": "String"
+			}
+		]
+	}
+}
