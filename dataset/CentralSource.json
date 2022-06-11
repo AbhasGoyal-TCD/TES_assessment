@@ -1,5 +1,5 @@
 {
-	"name": "Excel1",
+	"name": "CentralSource",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureBlobStorage1",
@@ -10,11 +10,11 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"folderPath": "Xlsx_Format2",
+				"folderPath": "Central_Data",
 				"container": "tes-rawdata"
 			},
 			"sheetIndex": 0,
-			"firstRowAsHeader": false
+			"firstRowAsHeader": true
 		},
 		"schema": [
 			{

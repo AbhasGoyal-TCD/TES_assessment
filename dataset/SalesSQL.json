@@ -7,7 +7,68 @@
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
-		"schema": [],
+		"schema": [
+			{
+				"name": "Order_ID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Order_Date",
+				"type": "date"
+			},
+			{
+				"name": "Ship_Date",
+				"type": "date"
+			},
+			{
+				"name": "Ship_Mode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Customer_ID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Segment",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Postal_Code",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Product_ID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SALES",
+				"type": "decimal",
+				"precision": 20,
+				"scale": 2
+			},
+			{
+				"name": "QUANTITY",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Discount",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Profit",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Create_Timestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
 		"typeProperties": {
 			"schema": "dbo",
 			"table": "MERGED_DATA"

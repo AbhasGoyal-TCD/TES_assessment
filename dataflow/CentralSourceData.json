@@ -1,0 +1,110 @@
+{
+	"name": "CentralSourceData",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "CentralSource",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SalesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinSQL"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RemoveDuplicates"
+				},
+				{
+					"name": "AddCreateTimeStamp"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Order ID} as string,",
+				"          {Order Date} as date 'MM/dd/yyyy',",
+				"          {Ship Date} as date 'MM/dd/yyyy',",
+				"          {Ship Mode} as string,",
+				"          {Customer ID} as string,",
+				"          Segment as string,",
+				"          {Postal Code} as integer,",
+				"          {Product ID} as string,",
+				"          Sales as double,",
+				"          Quantity as integer,",
+				"          Discount as float,",
+				"          Profit as float",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false) ~> ReadSource",
+				"ReadSource aggregate(groupBy({Order ID},",
+				"          {Order Date},",
+				"          {Ship Date},",
+				"          {Ship Mode},",
+				"          {Customer ID},",
+				"          Segment,",
+				"          {Postal Code},",
+				"          {Product ID},",
+				"          Sales,",
+				"          Quantity,",
+				"          Discount,",
+				"          Profit),",
+				"     Dummy = sum(1)) ~> RemoveDuplicates",
+				"RemoveDuplicates derive(TimeStamp = currentUTC()) ~> AddCreateTimeStamp",
+				"AddCreateTimeStamp sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Order_ID as string,",
+				"          Order_Date as date,",
+				"          Ship_Date as date,",
+				"          Ship_Mode as string,",
+				"          Customer_ID as string,",
+				"          Segment as string,",
+				"          Postal_Code as integer,",
+				"          Product_ID as string,",
+				"          SALES as decimal(20,2),",
+				"          QUANTITY as integer,",
+				"          Discount as double,",
+				"          Profit as double,",
+				"          Create_Timestamp as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Order_ID = {Order ID},",
+				"          Order_Date = {Order Date},",
+				"          Ship_Date = {Ship Date},",
+				"          Ship_Mode = {Ship Mode},",
+				"          Customer_ID = {Customer ID},",
+				"          Segment,",
+				"          Postal_Code = {Postal Code},",
+				"          Product_ID = {Product ID},",
+				"          SALES = Sales,",
+				"          QUANTITY = Quantity,",
+				"          Discount,",
+				"          Profit,",
+				"          Create_Timestamp = TimeStamp",
+				"     )) ~> InsertinSQL"
+			]
+		}
+	}
+}
