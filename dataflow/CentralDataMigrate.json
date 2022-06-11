@@ -33,20 +33,6 @@
 						"type": "DatasetReference"
 					},
 					"name": "AddLogs1"
-				},
-				{
-					"dataset": {
-						"referenceName": "SalesLogsSQL",
-						"type": "DatasetReference"
-					},
-					"name": "AddLogs2"
-				},
-				{
-					"dataset": {
-						"referenceName": "SalesLogsSQL",
-						"type": "DatasetReference"
-					},
-					"name": "AddLogs3"
 				}
 			],
 			"transformations": [
@@ -63,22 +49,19 @@
 					"name": "SourceRowCount"
 				},
 				{
-					"name": "ChangeType1"
-				},
-				{
 					"name": "ErrorRowCount"
 				},
 				{
 					"name": "DuplicateRowCount"
 				},
 				{
-					"name": "ChangeType2"
-				},
-				{
-					"name": "ChangeType3"
-				},
-				{
 					"name": "RenameColumns"
+				},
+				{
+					"name": "AddDuplicateRows"
+				},
+				{
+					"name": "AddErrorRows"
 				}
 			],
 			"scriptLines": [
@@ -131,15 +114,12 @@
 				"AddColumns aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
 				"     RowCount = sum(1)) ~> SourceRowCount",
-				"SourceRowCount alterRow(upsertIf(true())) ~> ChangeType1",
 				"RowswithNulls@Ignore aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
 				"     RowCount = sum(1)) ~> ErrorRowCount",
 				"RemoveDuplicates aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
 				"     RowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
-				"DuplicateRowCount alterRow(upsertIf(true())) ~> ChangeType2",
-				"ErrorRowCount alterRow(upsertIf(true())) ~> ChangeType3",
 				"ReadSource select(mapColumn(",
 				"          {Order ID},",
 				"          {Order Date},",
@@ -157,6 +137,16 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+				"SourceRowCount, DuplicateRowCount join(SourceRowCount@Source_File == DuplicateRowCount@Source_File,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> AddDuplicateRows",
+				"AddDuplicateRows, ErrorRowCount join(SourceRowCount@Source_File == ErrorRowCount@Source_File,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> AddErrorRows",
 				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -217,7 +207,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> InsertinCSV",
-				"ChangeType1 sink(allowSchemaDrift: false,",
+				"AddErrorRows sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
 				"          SOURCE_FILE as string,",
@@ -228,67 +218,20 @@
 				"          FINAL_COUNT as integer",
 				"     ),",
 				"     deletable:false,",
-				"     insertable:false,",
+				"     insertable:true,",
 				"     updateable:false,",
-				"     upsertable:true,",
-				"     keys:['SOURCE_FILE','TIMESTAMP'],",
+				"     upsertable:false,",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          SOURCE_FILE = Source_File,",
-				"          TIMESTAMP = TimeStamp,",
-				"          SOURCE_ROW_COUNT = RowCount",
-				"     )) ~> AddLogs1",
-				"ChangeType2 sink(allowSchemaDrift: false,",
-				"     validateSchema: true,",
-				"     input(",
-				"          SOURCE_FILE as string,",
-				"          TIMESTAMP as timestamp,",
-				"          SOURCE_ROW_COUNT as integer,",
-				"          ERROR_ROWS as integer,",
-				"          DUPLICATE_ROW_COUNT as integer,",
-				"          FINAL_COUNT as integer",
-				"     ),",
-				"     deletable:false,",
-				"     insertable:false,",
-				"     updateable:false,",
-				"     upsertable:true,",
-				"     keys:['SOURCE_FILE','TIMESTAMP'],",
-				"     format: 'table',",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
-				"     mapColumn(",
-				"          SOURCE_FILE = Source_File,",
-				"          TIMESTAMP = TimeStamp,",
-				"          DUPLICATE_ROW_COUNT = RowCount",
-				"     )) ~> AddLogs2",
-				"ChangeType3 sink(allowSchemaDrift: false,",
-				"     validateSchema: true,",
-				"     input(",
-				"          SOURCE_FILE as string,",
-				"          TIMESTAMP as timestamp,",
-				"          SOURCE_ROW_COUNT as integer,",
-				"          ERROR_ROWS as integer,",
-				"          DUPLICATE_ROW_COUNT as integer,",
-				"          FINAL_COUNT as integer",
-				"     ),",
-				"     deletable:false,",
-				"     insertable:false,",
-				"     updateable:false,",
-				"     upsertable:true,",
-				"     keys:['SOURCE_FILE','TIMESTAMP'],",
-				"     format: 'table',",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
-				"     mapColumn(",
-				"          SOURCE_FILE = Source_File,",
-				"          TIMESTAMP = TimeStamp,",
-				"          ERROR_ROWS = RowCount",
-				"     )) ~> AddLogs3"
+				"          SOURCE_FILE = SourceRowCount@Source_File,",
+				"          TIMESTAMP = SourceRowCount@TimeStamp,",
+				"          SOURCE_ROW_COUNT = SourceRowCount@RowCount,",
+				"          DUPLICATE_ROW_COUNT = DuplicateRowCount@RowCount,",
+				"          ERROR_ROWS = ErrorRowCount@RowCount",
+				"     )) ~> AddLogs1"
 			]
 		}
 	}
