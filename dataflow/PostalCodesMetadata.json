@@ -103,7 +103,8 @@
 				"          Postal_Code = FilterExistingRows@Retain@postal_code,",
 				"          State = FilterExistingRows@Retain@state,",
 				"          Region = FilterExistingRows@Retain@region,",
-				"          Country = FilterExistingRows@Retain@country",
+				"          Country = FilterExistingRows@Retain@country,",
+				"          Country_Region = FilterExistingRows@Retain@Country_Region",
 				"     )) ~> InsertinSQL"
 			]
 		}
