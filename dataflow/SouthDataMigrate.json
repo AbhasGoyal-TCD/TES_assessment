@@ -104,7 +104,7 @@
 				"          {Sales Converted} = toDouble(Sales),",
 				"          {Quantity Converted} = toInteger(Quantity),",
 				"          {Discount Converted} = round(toFloat(Discount),2),",
-				"          {Profit Converted} = round(toFloat(replace(Profit,'$','')),2)) ~> AddColumns",
+				"          {Profit Converted} = round(toFloat(regexReplace(Profit,'[^.0-9]','')),2)) ~> AddColumns",
 				"AddColumns aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
 				"     RowCount = sum(1)) ~> SourceRowCount",
