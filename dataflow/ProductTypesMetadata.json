@@ -79,13 +79,13 @@
 				"     insertable:true,",
 				"     updateable:true,",
 				"     upsertable:false,",
-				"     keys:['Product_type'],",
+				"     keys:['Product_Type'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          Product_type = FilterExistingRows@Retain@product_type,",
+				"          Product_Type = FilterExistingRows@Retain@product_type,",
 				"          Product_Category = FilterExistingRows@Retain@product_category",
 				"     )) ~> InsertinSQL"
 			]
