@@ -45,7 +45,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(activity('CheckCentralSourceCount').output.count,10) \r\n",
+						"value": "@equals(activity('CheckCentralSourceCount').output.count,42) \n",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
@@ -72,7 +72,7 @@
 								},
 								"traceLevel": "Fine",
 								"continuationSettings": {
-									"customizedCheckpointKey": "3c6e7dae-9b71-4164-bf86-832e2050a8f8"
+									"customizedCheckpointKey": "5285c529-ab64-44da-ad1e-b84d8d8ec928"
 								}
 							}
 						}
