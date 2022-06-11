@@ -19,6 +19,34 @@
 						"type": "DatasetReference"
 					},
 					"name": "InsertinSQL"
+				},
+				{
+					"dataset": {
+						"referenceName": "DumpRowstobeFixed",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinCSV"
+				},
+				{
+					"dataset": {
+						"referenceName": "SalesLogsSQL",
+						"type": "DatasetReference"
+					},
+					"name": "AddLogs1"
+				},
+				{
+					"dataset": {
+						"referenceName": "SalesLogsSQL",
+						"type": "DatasetReference"
+					},
+					"name": "AddLogs2"
+				},
+				{
+					"dataset": {
+						"referenceName": "SalesLogsSQL",
+						"type": "DatasetReference"
+					},
+					"name": "AddLogs3"
 				}
 			],
 			"transformations": [
@@ -26,7 +54,28 @@
 					"name": "RemoveDuplicates"
 				},
 				{
+					"name": "RowswithNulls"
+				},
+				{
 					"name": "AddCreateTimeStamp"
+				},
+				{
+					"name": "SourceRowCount"
+				},
+				{
+					"name": "ChangeType1"
+				},
+				{
+					"name": "ErrorRowCount"
+				},
+				{
+					"name": "DuplicateRowCount"
+				},
+				{
+					"name": "ChangeType2"
+				},
+				{
+					"name": "ChangeType3"
 				}
 			],
 			"scriptLines": [
@@ -49,8 +98,9 @@
 				"     ignoreNoFilesFound: false,",
 				"     enableCdc: true,",
 				"     mode: 'read',",
-				"     skipInitialLoad: false) ~> ReadSource",
-				"ReadSource aggregate(groupBy({Order ID},",
+				"     skipInitialLoad: false,",
+				"     rowUrlColumn: 'Source_File') ~> ReadSource",
+				"RowswithNulls@Retain aggregate(groupBy({Order ID},",
 				"          {Order Date},",
 				"          {Ship Date},",
 				"          {Ship Mode},",
@@ -61,10 +111,26 @@
 				"          Sales,",
 				"          Quantity,",
 				"          Discount,",
-				"          Profit),",
+				"          Profit,",
+				"          Source_File,",
+				"          TimeStamp),",
 				"     Dummy = sum(1)) ~> RemoveDuplicates",
-				"RemoveDuplicates derive(TimeStamp = currentUTC()) ~> AddCreateTimeStamp",
-				"AddCreateTimeStamp sink(allowSchemaDrift: false,",
+				"AddCreateTimeStamp split(!isNull({Order ID}) && !isNull({Order Date}) && !isNull({Ship Date}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code}) && !isNull({Product ID}) && !isNull(Sales) && !isNull(Quantity) && !isNull(Discount) && !isNull(Profit) ,",
+				"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
+				"ReadSource derive(TimeStamp = currentUTC()) ~> AddCreateTimeStamp",
+				"AddCreateTimeStamp aggregate(groupBy(Source_File,",
+				"          TimeStamp),",
+				"     RowCount = sum(1)) ~> SourceRowCount",
+				"SourceRowCount alterRow(upsertIf(true())) ~> ChangeType1",
+				"RowswithNulls@Ignore aggregate(groupBy(Source_File,",
+				"          TimeStamp),",
+				"     RowCount = sum(1)) ~> ErrorRowCount",
+				"RemoveDuplicates aggregate(groupBy(Source_File,",
+				"          TimeStamp),",
+				"     RowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
+				"DuplicateRowCount alterRow(upsertIf(true())) ~> ChangeType2",
+				"ErrorRowCount alterRow(upsertIf(true())) ~> ChangeType3",
+				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
 				"          Order_ID as string,",
@@ -79,7 +145,8 @@
 				"          QUANTITY as integer,",
 				"          Discount as double,",
 				"          Profit as double,",
-				"          Create_Timestamp as timestamp",
+				"          Create_Timestamp as timestamp,",
+				"          SOURCE_FILE as string",
 				"     ),",
 				"     deletable:false,",
 				"     insertable:true,",
@@ -102,8 +169,116 @@
 				"          QUANTITY = Quantity,",
 				"          Discount,",
 				"          Profit,",
-				"          Create_Timestamp = TimeStamp",
-				"     )) ~> InsertinSQL"
+				"          Create_Timestamp = TimeStamp,",
+				"          SOURCE_FILE = Source_File",
+				"     )) ~> InsertinSQL",
+				"RowswithNulls@Ignore sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Column_1 as string,",
+				"          Column_2 as string,",
+				"          Column_3 as string,",
+				"          Column_4 as string,",
+				"          Column_5 as string,",
+				"          Column_6 as string,",
+				"          Column_7 as string,",
+				"          Column_8 as string,",
+				"          Column_9 as string,",
+				"          Column_10 as string,",
+				"          Column_11 as string,",
+				"          Column_12 as string",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          {Order ID},",
+				"          {Order Date},",
+				"          {Ship Date},",
+				"          {Ship Mode},",
+				"          {Customer ID},",
+				"          Segment,",
+				"          {Postal Code},",
+				"          {Product ID},",
+				"          Sales,",
+				"          Quantity,",
+				"          Discount,",
+				"          Profit,",
+				"          Source_File",
+				"     )) ~> InsertinCSV",
+				"ChangeType1 sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          SOURCE_FILE as string,",
+				"          TIMESTAMP as timestamp,",
+				"          SOURCE_ROW_COUNT as integer,",
+				"          ERROR_ROWS as integer,",
+				"          DUPLICATE_ROW_COUNT as integer,",
+				"          FINAL_COUNT as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['SOURCE_FILE','TIMESTAMP'],",
+				"     skipKeyWrites:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SOURCE_FILE = Source_File,",
+				"          TIMESTAMP = TimeStamp,",
+				"          SOURCE_ROW_COUNT = RowCount",
+				"     )) ~> AddLogs1",
+				"ChangeType2 sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          SOURCE_FILE as string,",
+				"          TIMESTAMP as timestamp,",
+				"          SOURCE_ROW_COUNT as integer,",
+				"          ERROR_ROWS as integer,",
+				"          DUPLICATE_ROW_COUNT as integer,",
+				"          FINAL_COUNT as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Source_File','TimeStamp'],",
+				"     skipKeyWrites:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SOURCE_FILE = Source_File,",
+				"          TIMESTAMP = TimeStamp,",
+				"          DUPLICATE_ROW_COUNT = RowCount",
+				"     )) ~> AddLogs2",
+				"ChangeType3 sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          SOURCE_FILE as string,",
+				"          TIMESTAMP as timestamp,",
+				"          SOURCE_ROW_COUNT as integer,",
+				"          ERROR_ROWS as integer,",
+				"          DUPLICATE_ROW_COUNT as integer,",
+				"          FINAL_COUNT as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['Source_File','TimeStamp'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SOURCE_FILE = Source_File,",
+				"          TIMESTAMP = TimeStamp,",
+				"          ERROR_ROWS = RowCount",
+				"     )) ~> AddLogs3"
 			]
 		}
 	}
