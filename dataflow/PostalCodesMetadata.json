@@ -98,7 +98,13 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> InsertinSQL"
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Postal_Code = FilterExistingRows@Retain@postal_code,",
+				"          State = FilterExistingRows@Retain@state,",
+				"          Region = FilterExistingRows@Retain@region,",
+				"          Country = FilterExistingRows@Retain@country",
+				"     )) ~> InsertinSQL"
 			]
 		}
 	}
