@@ -181,7 +181,7 @@
 				"     rejectedData_container: 'tes-rawdata',",
 				"     rejectedData_folderPath: 'Rows_to_be_Fixed',",
 				"     transactionCommit: 'single',",
-				"     reportSuccessOnError: false,",
+				"     reportSuccessOnError: true,",
 				"     mapColumn(",
 				"          Order_ID = {Order ID},",
 				"          Order_Date = {Order Date Converted},",
