@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"folderPath": "JSON_Format",
+				"folderPath": "South_Data",
 				"container": "tes-rawdata"
 			},
 			"encodingName": "UTF-8"
