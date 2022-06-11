@@ -22,9 +22,6 @@
 					"name": "FlattenJson"
 				},
 				{
-					"name": "RenameXlsx2Columns"
-				},
-				{
 					"name": "aggregate1"
 				}
 			],
@@ -58,23 +55,6 @@
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> FlattenJson",
-				" select(mapColumn(",
-				"          {Order ID} = Column_1,",
-				"          {Order Date} = Column_2,",
-				"          {Ship Date} = Column_3,",
-				"          {Ship Mode} = Column_4,",
-				"          {Customer ID} = Column_5,",
-				"          Segment = Column_6,",
-				"          {Postal Code} = Column_7,",
-				"          {Product ID} = Column_8,",
-				"          Sales = Column_9,",
-				"          Quantity = Column_10,",
-				"          Discount = Column_11,",
-				"          Profit = Column_12,",
-				"          {Source File}",
-				"     ),",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> RenameXlsx2Columns",
 				"FlattenJson aggregate(groupBy({Source File}),",
 				"     RowCount = sum(1)) ~> aggregate1",
 				"aggregate1 sink(allowSchemaDrift: true,",

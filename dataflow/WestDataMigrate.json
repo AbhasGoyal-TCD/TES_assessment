@@ -137,7 +137,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> RenameColumns",
-				"SourceRowCount, DuplicateRowCount join(SourceRowCount@Source_File == DuplicateRowCount@TimeStamp,",
+				"SourceRowCount, DuplicateRowCount join(SourceRowCount@Source_File == DuplicateRowCount@Source_File,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
