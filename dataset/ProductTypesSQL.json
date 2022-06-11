@@ -9,7 +9,7 @@
 		"type": "AzureSqlTable",
 		"schema": [
 			{
-				"name": "Product_type",
+				"name": "Product_Type",
 				"type": "nvarchar"
 			},
 			{
