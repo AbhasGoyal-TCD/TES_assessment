@@ -1,0 +1,229 @@
+{
+	"name": "SouthDataMigrate",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "SouthSource",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SalesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinSQL"
+				},
+				{
+					"dataset": {
+						"referenceName": "DumpRowstobeFixed",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinCSV"
+				},
+				{
+					"dataset": {
+						"referenceName": "SalesLogsSQL",
+						"type": "DatasetReference"
+					},
+					"name": "AddLogs"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RemoveDuplicates"
+				},
+				{
+					"name": "RowswithNulls"
+				},
+				{
+					"name": "AddColumns"
+				},
+				{
+					"name": "SourceRowCount"
+				},
+				{
+					"name": "ErrorRowCount"
+				},
+				{
+					"name": "DuplicateRowCount"
+				},
+				{
+					"name": "AddDuplicateRows"
+				},
+				{
+					"name": "AddErrorRoes"
+				},
+				{
+					"name": "FlattenandRenameColumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          sample_data_south as (Order as string, Date as string, {Date Shipped} as string, {Shipping Method} as string, {Customer Number} as string, Segment as string, {Postal Code 1} as string, {Product ID} as string, Sales as string, Quantity as string, Discount as string, Profit as string)[]",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     rowUrlColumn: 'Source_File',",
+				"     documentForm: 'documentPerLine') ~> ReadSource",
+				"RowswithNulls@Retain aggregate(groupBy({Order ID},",
+				"          {Ship Mode},",
+				"          {Customer ID},",
+				"          Segment,",
+				"          {Product ID},",
+				"          Source_File,",
+				"          TimeStamp,",
+				"          {Order Date Converted},",
+				"          {Ship Date Converted},",
+				"          {Postal Code Converted},",
+				"          {Sales Converted},",
+				"          {Quantity Converted},",
+				"          {Discount Converted},",
+				"          {Profit Converted}),",
+				"     Dummy = sum(1)) ~> RemoveDuplicates",
+				"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+				"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
+				"FlattenandRenameColumns derive(TimeStamp = currentUTC(),",
+				"          {Order Date Converted} = toDate({Order Date},'MM/dd/yy'),",
+				"          {Ship Date Converted} = toDate({Ship Date},'MM/dd/yy'),",
+				"          {Postal Code Converted} = toInteger({Postal Code}),",
+				"          {Sales Converted} = toDouble(Sales),",
+				"          {Quantity Converted} = toInteger(Quantity),",
+				"          {Discount Converted} = toFloat(Discount),",
+				"          {Profit Converted} = toFloat(Profit)) ~> AddColumns",
+				"AddColumns aggregate(groupBy(Source_File,",
+				"          TimeStamp),",
+				"     RowCount = sum(1)) ~> SourceRowCount",
+				"RowswithNulls@Ignore aggregate(groupBy(Source_File,",
+				"          TimeStamp),",
+				"     RowCount = sum(1)) ~> ErrorRowCount",
+				"RemoveDuplicates aggregate(groupBy(Source_File,",
+				"          TimeStamp),",
+				"     RowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
+				"SourceRowCount, DuplicateRowCount join(SourceRowCount@Source_File == DuplicateRowCount@Source_File,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> AddDuplicateRows",
+				"AddDuplicateRows, ErrorRowCount join(SourceRowCount@Source_File == ErrorRowCount@Source_File,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> AddErrorRoes",
+				"ReadSource foldDown(unroll(sample_data_south),",
+				"     mapColumn(",
+				"          {Order ID} = sample_data_south.Order,",
+				"          {Order Date} = sample_data_south.Date,",
+				"          {Ship Date} = sample_data_south.{Date Shipped},",
+				"          {Ship Mode} = sample_data_south.{Shipping Method},",
+				"          {Customer ID} = sample_data_south.{Customer Number},",
+				"          Segment = sample_data_south.Segment,",
+				"          {Postal Code} = sample_data_south.{Postal Code 1},",
+				"          {Product ID} = sample_data_south.{Product ID},",
+				"          Sales = sample_data_south.Sales,",
+				"          Quantity = sample_data_south.Quantity,",
+				"          Discount = sample_data_south.Discount,",
+				"          Profit = sample_data_south.Profit,",
+				"          Source_File",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> FlattenandRenameColumns",
+				"RemoveDuplicates sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Order_ID as string,",
+				"          Order_Date as date,",
+				"          Ship_Date as date,",
+				"          Ship_Mode as string,",
+				"          Customer_ID as string,",
+				"          Segment as string,",
+				"          Postal_Code as integer,",
+				"          Product_ID as string,",
+				"          SALES as decimal(20,2),",
+				"          QUANTITY as integer,",
+				"          Discount as double,",
+				"          Profit as double,",
+				"          Create_Timestamp as timestamp,",
+				"          SOURCE_FILE as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Order_ID = {Order ID},",
+				"          Order_Date = {Order Date Converted},",
+				"          Ship_Date = {Ship Date Converted},",
+				"          Ship_Mode = {Ship Mode},",
+				"          Customer_ID = {Customer ID},",
+				"          Segment,",
+				"          Postal_Code = {Postal Code Converted},",
+				"          Product_ID = {Product ID},",
+				"          SALES = {Sales Converted},",
+				"          QUANTITY = {Quantity Converted},",
+				"          Discount = {Discount Converted},",
+				"          Profit = {Profit Converted},",
+				"          Create_Timestamp = TimeStamp,",
+				"          SOURCE_FILE = Source_File",
+				"     )) ~> InsertinSQL",
+				"RowswithNulls@Ignore sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Column_1 as string,",
+				"          Column_2 as string,",
+				"          Column_3 as string,",
+				"          Column_4 as string,",
+				"          Column_5 as string,",
+				"          Column_6 as string,",
+				"          Column_7 as string,",
+				"          Column_8 as string,",
+				"          Column_9 as string,",
+				"          Column_10 as string,",
+				"          Column_11 as string,",
+				"          Column_12 as string",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> InsertinCSV",
+				"AddErrorRoes sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          SOURCE_FILE as string,",
+				"          TIMESTAMP as timestamp,",
+				"          SOURCE_ROW_COUNT as integer,",
+				"          ERROR_ROWS as integer,",
+				"          DUPLICATE_ROW_COUNT as integer,",
+				"          FINAL_COUNT as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SOURCE_FILE = SourceRowCount@Source_File,",
+				"          TIMESTAMP = SourceRowCount@TimeStamp,",
+				"          SOURCE_ROW_COUNT = SourceRowCount@RowCount,",
+				"          ERROR_ROWS = ErrorRowCount@RowCount,",
+				"          DUPLICATE_ROW_COUNT = DuplicateRowCount@RowCount",
+				"     )) ~> AddLogs"
+			]
+		}
+	}
+}
