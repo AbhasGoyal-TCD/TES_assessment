@@ -81,8 +81,8 @@
 			"scriptLines": [
 				"source(output(",
 				"          {Order ID} as string,",
-				"          {Order Date} as date 'MM/dd/yyyy',",
-				"          {Ship Date} as date 'MM/dd/yyyy',",
+				"          {Order Date} as date,",
+				"          {Ship Date} as date,",
 				"          {Ship Mode} as string,",
 				"          {Customer ID} as string,",
 				"          Segment as string,",
