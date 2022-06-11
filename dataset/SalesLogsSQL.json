@@ -1,0 +1,47 @@
+{
+	"name": "SalesLogsSQL",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "SOURCE_FILE",
+				"type": "nvarchar"
+			},
+			{
+				"name": "TIMESTAMP",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "SOURCE_ROW_COUNT",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ERROR_ROWS",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "DUPLICATE_ROW_COUNT",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FINAL_COUNT",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "MERGED_DATA_LOGS"
+		}
+	}
+}
