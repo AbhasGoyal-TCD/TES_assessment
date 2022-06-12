@@ -98,7 +98,7 @@
 				"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 				"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
 				"FlattenandRenameColumns derive(TimeStamp = currentUTC(),",
-				"          {Order Date Converted} = toDate(iif(length({Order Date}) ==9,replace({Order Date}, '202', '/2'),{Order Date} ),'MM/dd/yy'),",
+				"          {Order Date Converted} = iif(length({Order Date}) ==9,toDate(replace({Order Date}, '202', '/2'),'dd/MM/yy'),toDate({Order Date} ,'MM/dd/yy')),",
 				"          {Ship Date Converted} = toDate({Ship Date},'MM/dd/yy'),",
 				"          {Postal Code Converted} = toInteger({Postal Code}),",
 				"          {Sales Converted} = toDouble(Sales),",
