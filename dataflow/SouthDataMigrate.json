@@ -228,9 +228,9 @@
 				"     mapColumn(",
 				"          SOURCE_FILE = SourceRowCount@Source_File,",
 				"          TIMESTAMP = SourceRowCount@TimeStamp,",
-				"          SOURCE_ROW_COUNT = SourceRowCount@RowCount,",
-				"          ERROR_ROWS = ErrorRowCounts@ErrorRowCount,",
-				"          DUPLICATE_ROW_COUNT = DuplicateRowCounts@DuplicateRowCount",
+				"          SOURCE_ROW_COUNT = RowCount,",
+				"          ERROR_ROWS = DuplicateRowCount,",
+				"          DUPLICATE_ROW_COUNT = ErrorRowCount",
 				"     )) ~> AddLogs"
 			]
 		}
