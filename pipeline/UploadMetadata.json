@@ -106,7 +106,7 @@
 				}
 			},
 			{
-				"name": "AddMissingProduct",
+				"name": "Check1stValue",
 				"type": "Script",
 				"dependsOn": [
 					{
@@ -131,8 +131,72 @@
 				"typeProperties": {
 					"scripts": [
 						{
-							"type": "Query",
-							"text": "INSERT IGNORE INTO  Products \nVALUES ('FUR-BO-10001810','','BookCases');"
+							"type": "NonQuery",
+							"text": "INSERT INTO Products \nSelect 'FUR-BO-10001810','','BookCases'\nwhere not exists (select 1 from Products where Product_ID != 'FUR-BO-10001810')"
+						}
+					]
+				}
+			},
+			{
+				"name": "Check2ndValue",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProducts",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "INSERT INTO Products \nSelect 'FUR-TA-10000199','','Tables'\nwhere not exists (select 1 from Products where Product_ID != 'FUR-TA-10000199')"
+						}
+					]
+				}
+			},
+			{
+				"name": "Check2ndValue_copy1",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProducts",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "INSERT INTO Products \nSelect 'Product Unknown','',''\nwhere not exists (select 1 from Products where Product_ID != 'Product Unknown')"
 						}
 					]
 				}
