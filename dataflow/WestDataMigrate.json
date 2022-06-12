@@ -66,6 +66,9 @@
 				},
 				{
 					"name": "AddErrorRows"
+				},
+				{
+					"name": "FixNullValues"
 				}
 			],
 			"scriptLines": [
@@ -121,10 +124,10 @@
 				"     RowCount = sum(1)) ~> SourceRowCount",
 				"RowswithNulls@Ignore aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
-				"     RowCount = sum(1)) ~> ErrorRowCount",
+				"     ErrorRowCount = sum(1)) ~> ErrorRowCount",
 				"RemoveDuplicates aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
-				"     RowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
+				"     DuplicateRowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
 				"ReadSource select(mapColumn(",
 				"          {Order ID} = Column_1,",
 				"          {Order Date} = Column_2,",
@@ -152,6 +155,8 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> AddErrorRows",
+				"AddErrorRows derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
+				"          ErrorRowCount = iif(isNull(ErrorRowCount),0,toInteger(ErrorRowCount))) ~> FixNullValues",
 				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -217,7 +222,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> InsertinCSV",
-				"AddErrorRows sink(allowSchemaDrift: false,",
+				"FixNullValues sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
 				"          SOURCE_FILE as string,",
@@ -239,8 +244,8 @@
 				"          SOURCE_FILE = SourceRowCount@Source_File,",
 				"          TIMESTAMP = SourceRowCount@TimeStamp,",
 				"          SOURCE_ROW_COUNT = SourceRowCount@RowCount,",
-				"          DUPLICATE_ROW_COUNT = DuplicateRowCount@RowCount,",
-				"          ERROR_ROWS = ErrorRowCount@RowCount",
+				"          DUPLICATE_ROW_COUNT = DuplicateRowCount,",
+				"          ERROR_ROWS = ErrorRowCount@ErrorRowCount",
 				"     )) ~> AddLogs"
 			]
 		}
