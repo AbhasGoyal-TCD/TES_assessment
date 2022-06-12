@@ -132,7 +132,7 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "INSERT INTO Products \nSelect 'FUR-BO-10001810','','BookCases'\nwhere not exists (select 1 from Products where Product_ID != 'FUR-BO-10001810')"
+							"text": "INSERT INTO Products \nSelect 'FUR-BO-10001810','','BookCases'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-BO-10001810')"
 						}
 					]
 				}
@@ -164,13 +164,13 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "INSERT INTO Products \nSelect 'FUR-TA-10000199','','Tables'\nwhere not exists (select 1 from Products where Product_ID != 'FUR-TA-10000199')"
+							"text": "INSERT INTO Products \nSelect 'FUR-TA-10000199','','Tables'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-TA-10000199')"
 						}
 					]
 				}
 			},
 			{
-				"name": "Check2ndValue_copy1",
+				"name": "Check3rdValue",
 				"type": "Script",
 				"dependsOn": [
 					{
@@ -196,7 +196,39 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "INSERT INTO Products \nSelect 'Product Unknown','',''\nwhere not exists (select 1 from Products where Product_ID != 'Product Unknown')"
+							"text": "INSERT INTO Products \nSelect 'Product Unknown','','Unknown'\nwhere not exists (select 1 from Products where Product_ID = 'Product Unknown')"
+						}
+					]
+				}
+			},
+			{
+				"name": "Check4thValue",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "UploadMetadataProduct_Types",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "INSERT INTO Product_Types\nSelect 'Unknown','Unknown'\nwhere not exists (select 1 from Product_Types where Product_Type = 'Unknown' )"
 						}
 					]
 				}
