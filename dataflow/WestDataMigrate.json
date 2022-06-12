@@ -6,7 +6,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "CentralSource",
+						"referenceName": "WestSource",
 						"type": "DatasetReference"
 					},
 					"name": "ReadSource"
