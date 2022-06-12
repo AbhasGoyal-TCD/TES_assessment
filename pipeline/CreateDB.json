@@ -1,126 +1,11 @@
 {
-	"name": "pipeline1",
+	"name": "CreateDB",
 	"properties": {
 		"activities": [
 			{
-				"name": "CentralDataMigrate",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "1.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "CentralDataMigrate",
-						"type": "DataFlowReference"
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "8a73dcc9-fad2-45cd-bc2f-90b93e656d26"
-					}
-				}
-			},
-			{
-				"name": "EastDataMigrate",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "1.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "EastDataMigrate",
-						"type": "DataFlowReference"
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "486b766f-91d6-472a-883b-e2ae9d1dd95b"
-					}
-				}
-			},
-			{
-				"name": "SouthDataMigrate",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "1.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "SouthDataMigrate",
-						"type": "DataFlowReference"
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "9301d16a-81cb-49a7-8734-ad7a2669337a"
-					}
-				}
-			},
-			{
-				"name": "WestDataMigrate",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "1.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "WestDataMigrate",
-						"type": "DataFlowReference"
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "3cedfc27-cb88-4030-9a70-4a1f089b0744"
-					}
-				}
-			},
-			{
-				"name": "UpdateFinalCountEast",
+				"name": "CreateCompanies",
 				"type": "Script",
-				"dependsOn": [
-					{
-						"activity": "EastDataMigrate",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -137,22 +22,15 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+							"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Companies]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Companies]\r\nGO\r\n\r\nCREATE TABLE Companies(\r\n    Company_ID INTEGER PRIMARY KEY,\r\n    Company NVARCHAR(255),\r\n    Contact NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n);"
 						}
 					]
 				}
 			},
 			{
-				"name": "UpdateFinalCountWest",
+				"name": "CreatePostalCode",
 				"type": "Script",
-				"dependsOn": [
-					{
-						"activity": "WestDataMigrate",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -169,22 +47,15 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+							"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Postal_Code]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Postal_Code]\r\nGO\r\n\r\nCREATE TABLE Postal_Code(\r\n    Postal_Code INTEGER PRIMARY KEY,\r\n    State NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n    Country_Region NVARCHAR(255),\r\n    Country NVARCHAR(255)\r\n);"
 						}
 					]
 				}
 			},
 			{
-				"name": "UpdateFinalCountSouth",
+				"name": "CreateProductType",
 				"type": "Script",
-				"dependsOn": [
-					{
-						"activity": "SouthDataMigrate",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -201,17 +72,17 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+							"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Product_Types]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Product_Types]\r\nGO\r\n\r\nCREATE TABLE Product_Types(\r\n    Product_Type NVARCHAR(255) PRIMARY KEY,\r\n    Product_Category NVARCHAR(255)\r\n);"
 						}
 					]
 				}
 			},
 			{
-				"name": "UpdateFinalCountCentral",
+				"name": "CreateProducts",
 				"type": "Script",
 				"dependsOn": [
 					{
-						"activity": "CentralDataMigrate",
+						"activity": "CreateProductType",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -233,35 +104,23 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+							"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Products]\r\nGO\r\n\r\nCREATE TABLE Products(\r\n    Product_ID NVARCHAR(255) PRIMARY KEY,\r\n    Product_Name NVARCHAR(255),\r\n    Category NVARCHAR(255),\r\n    FOREIGN KEY (Category) REFERENCES Product_Types(Product_Type)\r\n);"
 						}
 					]
 				}
 			},
 			{
-				"name": "DealwithNulls",
+				"name": "CreateMergedData",
 				"type": "Script",
 				"dependsOn": [
 					{
-						"activity": "UpdateFinalCountCentral",
+						"activity": "CreatePostalCode",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					},
 					{
-						"activity": "UpdateFinalCountEast",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "UpdateFinalCountWest",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "UpdateFinalCountSouth",
+						"activity": "CreateProducts",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -283,7 +142,32 @@
 					"scripts": [
 						{
 							"type": "NonQuery",
-							"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT = NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS = NULL;"
+							"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA]') AND type in (N'U'))\r\nDROP TABLE [dbo].[MERGED_DATA]\r\nGO\r\n\r\nCREATE TABLE MERGED_DATA(\r\n    Order_ID NVARCHAR(255),\r\n    Order_Date DATE,\r\n    Ship_Date DATE,\r\n    Ship_Mode NVARCHAR(255),\r\n    Customer_ID NVARCHAR(255),\r\n    Segment NVARCHAR(255),\r\n    Postal_Code INTEGER,\r\n    Product_ID NVARCHAR(255),\r\n    SALES decimal(20,2),\r\n    QUANTITY INTEGER,\r\n    Discount FLOAT,\r\n    Profit FLOAT,\r\n    Create_Timestamp DATETIME,\r\n    SOURCE_FILE NVARCHAR(255),\r\n    FOREIGN KEY (Postal_Code) REFERENCES Postal_Code(Postal_Code),\r\n    FOREIGN KEY (Product_ID) REFERENCES Products(Product_ID)\r\n);"
+						}
+					]
+				}
+			},
+			{
+				"name": "CreateMergedDataLogs",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA_LOGS]') AND type in (N'U'))\r\nDROP TABLE [dbo].[MERGED_DATA_LOGS]\r\nGO\r\n\r\nCREATE TABLE MERGED_DATA_LOGS(\r\n    SOURCE_FILE NVARCHAR(255),\r\n    TIMESTAMP DATETIME,\r\n    SOURCE_ROW_COUNT INTEGER,\r\n    ERROR_ROWS INTEGER,\r\n    DUPLICATE_ROW_COUNT INTEGER,\r\n    FINAL_COUNT INTEGER\r\n);"
 						}
 					]
 				}
