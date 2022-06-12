@@ -109,6 +109,134 @@
 						"customizedCheckpointKey": "36c785a3-9d83-4304-bcfa-a9cee394d96e"
 					}
 				}
+			},
+			{
+				"name": "AddCentralFinalCount",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "CentralDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(TIMESTAMP) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+						}
+					]
+				}
+			},
+			{
+				"name": "AddEastFinalCount",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "EastDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(TIMESTAMP) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+						}
+					]
+				}
+			},
+			{
+				"name": "AddSouthFinalCount",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "SouthDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(TIMESTAMP) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+						}
+					]
+				}
+			},
+			{
+				"name": "AddWestFinalCount",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "WestDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(TIMESTAMP) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+						}
+					]
+				}
 			}
 		],
 		"annotations": []
