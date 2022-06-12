@@ -109,6 +109,184 @@
 						"customizedCheckpointKey": "3cedfc27-cb88-4030-9a70-4a1f089b0744"
 					}
 				}
+			},
+			{
+				"name": "UpdateFinalCountEast",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "EastDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+						}
+					]
+				}
+			},
+			{
+				"name": "UpdateFinalCountWest",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "WestDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+						}
+					]
+				}
+			},
+			{
+				"name": "UpdateFinalCountSouth",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "SouthDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+						}
+					]
+				}
+			},
+			{
+				"name": "UpdateFinalCountCentral",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "CentralDataMigrate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+						}
+					]
+				}
+			},
+			{
+				"name": "DealwithNulls",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "UpdateFinalCountCentral",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "UpdateFinalCountEast",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "UpdateFinalCountWest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "UpdateFinalCountSouth",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT = NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS = NULL;"
+						}
+					]
+				}
 			}
 		],
 		"annotations": []
