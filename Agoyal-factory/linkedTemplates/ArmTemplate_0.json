@@ -18,14 +18,6 @@
 		"AzureTableStorage1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureTableStorage1'"
-		},
-		"AzureTableStorage2_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'AzureTableStorage2'"
-		},
-		"linkedService1_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
 		}
 	},
 	"variables": {
@@ -72,37 +64,198 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/AzureTableStorage2')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureTableStorage",
-				"typeProperties": {
-					"connectionString": "[parameters('AzureTableStorage2_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/linkedService1')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"connectionString": "[parameters('linkedService1_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/default')]",
 			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
 			"apiVersion": "2018-06-01",
 			"properties": {},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CreateDB')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "CreateCompanies",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Companies]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Companies]\r\nGO\r\n\r\nCREATE TABLE Companies(\r\n    Company_ID INTEGER PRIMARY KEY,\r\n    Company NVARCHAR(255),\r\n    Contact NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n);"
+								}
+							]
+						}
+					},
+					{
+						"name": "CreatePostalCode",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Postal_Code]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Postal_Code]\r\nGO\r\n\r\nCREATE TABLE Postal_Code(\r\n    Postal_Code INTEGER PRIMARY KEY,\r\n    State NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n    Country_Region NVARCHAR(255),\r\n    Country NVARCHAR(255)\r\n);"
+								}
+							]
+						}
+					},
+					{
+						"name": "CreateProductType",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Product_Types]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Product_Types]\r\nGO\r\n\r\nCREATE TABLE Product_Types(\r\n    Product_Type NVARCHAR(255) PRIMARY KEY,\r\n    Product_Category NVARCHAR(255)\r\n);"
+								}
+							]
+						}
+					},
+					{
+						"name": "CreateProducts",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "CreateProductType",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Products]\r\nGO\r\n\r\nCREATE TABLE Products(\r\n    Product_ID NVARCHAR(255) PRIMARY KEY,\r\n    Product_Name NVARCHAR(255),\r\n    Category NVARCHAR(255),\r\n    FOREIGN KEY (Category) REFERENCES Product_Types(Product_Type)\r\n);"
+								}
+							]
+						}
+					},
+					{
+						"name": "CreateMergedData",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "CreatePostalCode",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "CreateProducts",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA]') AND type in (N'U'))\r\nDROP TABLE [dbo].[MERGED_DATA]\r\nGO\r\n\r\nCREATE TABLE MERGED_DATA(\r\n    Order_ID NVARCHAR(255),\r\n    Order_Date DATE,\r\n    Ship_Date DATE,\r\n    Ship_Mode NVARCHAR(255),\r\n    Customer_ID NVARCHAR(255),\r\n    Segment NVARCHAR(255),\r\n    Postal_Code INTEGER,\r\n    Product_ID NVARCHAR(255),\r\n    SALES decimal(20,2),\r\n    QUANTITY INTEGER,\r\n    Discount FLOAT,\r\n    Profit FLOAT,\r\n    Create_Timestamp DATETIME,\r\n    SOURCE_FILE NVARCHAR(255),\r\n    FOREIGN KEY (Postal_Code) REFERENCES Postal_Code(Postal_Code),\r\n    FOREIGN KEY (Product_ID) REFERENCES Products(Product_ID)\r\n);"
+								}
+							]
+						}
+					},
+					{
+						"name": "CreateMergedDataLogs",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA_LOGS]') AND type in (N'U'))\r\nDROP TABLE [dbo].[MERGED_DATA_LOGS]\r\nGO\r\n\r\nCREATE TABLE MERGED_DATA_LOGS(\r\n    SOURCE_FILE NVARCHAR(255),\r\n    TIMESTAMP DATETIME,\r\n    SOURCE_ROW_COUNT INTEGER,\r\n    ERROR_ROWS INTEGER,\r\n    DUPLICATE_ROW_COUNT INTEGER,\r\n    FINAL_COUNT INTEGER\r\n);"
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/CentralSource')]",
@@ -775,6 +928,40 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProductsSQL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Product_ID",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Product_Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Category",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Products"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		}
 	]

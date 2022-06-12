@@ -13,38 +13,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/ProductsSQL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Product_ID",
-						"type": "nvarchar"
-					},
-					{
-						"name": "Product_Name",
-						"type": "nvarchar"
-					},
-					{
-						"name": "Category",
-						"type": "nvarchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "Products"
-				}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/RowstobeFixed')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -457,30 +425,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/integrationRuntime1')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "East US",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 8,
-							"timeToLive": 10,
-							"cleanup": false
-						}
-					}
-				},
-				"managedVirtualNetwork": {
-					"type": "ManagedVirtualNetworkReference",
-					"referenceName": "default"
-				}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/CentralDataMigrate')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -563,17 +507,15 @@
 						"          {Postal Code} as string,",
 						"          {Product ID} as string,",
 						"          Sales as string,",
-						"          Quantity as short,",
+						"          Quantity as string,",
 						"          Discount as string,",
 						"          Profit as string",
 						"     ),",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     rowUrlColumn: 'Source_File') ~> ReadSource",
+						"     rowUrlColumn: 'Source_File',",
+						"     mode: 'read') ~> ReadSource",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
 						"          {Ship Mode},",
 						"          {Customer ID},",
@@ -935,10 +877,8 @@
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     rowUrlColumn: 'Source_File') ~> ReadSource",
+						"     rowUrlColumn: 'Source_File',",
+						"     mode: 'read') ~> ReadSource",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
 						"          {Ship Mode},",
 						"          {Customer ID},",
@@ -962,8 +902,8 @@
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
 						"          {Sales Converted} = toDouble(regexReplace(Sales,'[^.0-9]','')),",
 						"          {Quantity Converted} = toInteger(regexReplace(Quantity,'[^.0-9]','')),",
-						"          {Discount Converted} = toFloat(Discount),",
-						"          {Profit Converted} = toFloat(Profit),",
+						"          {Discount Converted} = round(toFloat(Discount),2),",
+						"          {Profit Converted} = round(toFloat(Profit),2),",
 						"          {Product ID} = replace({Product ID}, '*', '')) ~> AddColumns",
 						"AddColumns aggregate(groupBy(Source_File,",
 						"          TimeStamp),",
@@ -1135,11 +1075,9 @@
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
 						"     rowUrlColumn: 'Source File',",
-						"     documentForm: 'documentPerLine') ~> Json",
+						"     documentForm: 'documentPerLine',",
+						"     mode: 'read') ~> Json",
 						"Json foldDown(unroll(sample_data_south),",
 						"     mapColumn(",
 						"          {Customer ID} = sample_data_south.{Customer Number},",
@@ -1487,9 +1425,7 @@
 					]
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ProductsSQL')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/SouthDataMigrate')]",
@@ -1570,11 +1506,9 @@
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
 						"     rowUrlColumn: 'Source_File',",
-						"     documentForm: 'documentPerLine') ~> ReadSource",
+						"     documentForm: 'documentPerLine',",
+						"     mode: 'read') ~> ReadSource",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
 						"          {Ship Mode},",
 						"          {Customer ID},",
@@ -1826,10 +1760,8 @@
 						"     allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     ignoreNoFilesFound: false,",
-						"     enableCdc: true,",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     rowUrlColumn: 'Source_File') ~> ReadSource",
+						"     rowUrlColumn: 'Source_File',",
+						"     mode: 'read') ~> ReadSource",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
 						"          {Ship Mode},",
 						"          {Customer ID},",
@@ -2261,7 +2193,8 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2022-06-12T11:39:05Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/CompaniesMetadata')]",
@@ -2353,10 +2286,39 @@
 											"coreCount": 8,
 											"computeType": "General"
 										},
-										"traceLevel": "Fine",
-										"continuationSettings": {
-											"customizedCheckpointKey": "ef152be8-52ec-4220-ac11-85376078cfe0"
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "UpdateFinalCountCentral",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "UploadCentralSource",
+											"dependencyConditions": [
+												"Succeeded"
+											]
 										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+											}
+										]
 									}
 								}
 							]
@@ -2439,10 +2401,39 @@
 											"coreCount": 8,
 											"computeType": "General"
 										},
-										"traceLevel": "Fine",
-										"continuationSettings": {
-											"customizedCheckpointKey": "e9c00a10-82a8-434b-b173-eca33cefea90"
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "UpdateFinalCountWest",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "WestSourceData",
+											"dependencyConditions": [
+												"Succeeded"
+											]
 										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+											}
+										]
 									}
 								}
 							]
@@ -2528,10 +2519,39 @@
 											"coreCount": 8,
 											"computeType": "General"
 										},
-										"traceLevel": "Fine",
-										"continuationSettings": {
-											"customizedCheckpointKey": "7a95dc4d-1042-47de-8586-80766336a446"
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "UpdateFinalCountEast",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "EastDataMigrate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
 										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+											}
+										]
 									}
 								}
 							]
@@ -2567,9 +2587,6 @@
 							"traceLevel": "None",
 							"cacheSinks": {
 								"firstRowOnly": true
-							},
-							"continuationSettings": {
-								"customizedCheckpointKey": "945ffa11-8ac3-4d4f-841a-b5028de87530"
 							}
 						}
 					},
@@ -2620,11 +2637,90 @@
 											"coreCount": 8,
 											"computeType": "General"
 										},
-										"traceLevel": "Fine",
-										"continuationSettings": {
-											"customizedCheckpointKey": "3a70aa30-07fa-4ac1-9bb7-ddea8494fed5"
-										}
+										"traceLevel": "Fine"
 									}
+								},
+								{
+									"name": "UpdateFinalCountSouth",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "SouthDataMigrate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "FixNullValues",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "VerifySouthSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "VerifyEastSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "VerifyWestSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "VerifyCentralSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT is NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS is NULL;\n"
 								}
 							]
 						}
@@ -2635,7 +2731,7 @@
 					"cancelAfter": {}
 				},
 				"annotations": [],
-				"lastPublishTime": "2022-06-10T10:24:06Z"
+				"lastPublishTime": "2022-06-12T12:20:18Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/WestSource')]",
@@ -2644,344 +2740,6 @@
 				"[concat(variables('factoryId'), '/dataflows/WestDataMigrate')]",
 				"[concat(variables('factoryId'), '/dataflows/EastDataMigrate')]",
 				"[concat(variables('factoryId'), '/dataflows/SouthDataMigrate')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "CentralDataMigrate",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "CentralDataMigrate",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"InsertinSQL": {},
-									"InsertinCSV": {},
-									"AddLogs1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "8a73dcc9-fad2-45cd-bc2f-90b93e656d26"
-							}
-						}
-					},
-					{
-						"name": "EastDataMigrate",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "EastDataMigrate",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"InsertinSQL": {},
-									"InsertinCSV": {},
-									"AddLogs": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "486b766f-91d6-472a-883b-e2ae9d1dd95b"
-							}
-						}
-					},
-					{
-						"name": "SouthDataMigrate",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "SouthDataMigrate",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"InsertinSQL": {},
-									"InsertinCSV": {},
-									"AddLogs": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "9301d16a-81cb-49a7-8734-ad7a2669337a"
-							}
-						}
-					},
-					{
-						"name": "WestDataMigrate",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "WestDataMigrate",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"InsertinSQL": {},
-									"InsertinCSV": {},
-									"AddLogs": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "3cedfc27-cb88-4030-9a70-4a1f089b0744"
-							}
-						}
-					},
-					{
-						"name": "UpdateFinalCountEast",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "EastDataMigrate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
-								}
-							]
-						}
-					},
-					{
-						"name": "UpdateFinalCountWest",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "WestDataMigrate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
-								}
-							]
-						}
-					},
-					{
-						"name": "UpdateFinalCountSouth",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "SouthDataMigrate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
-								}
-							]
-						}
-					},
-					{
-						"name": "UpdateFinalCountCentral",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "CentralDataMigrate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
-								}
-							]
-						}
-					},
-					{
-						"name": "DealwithNulls",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "UpdateFinalCountCentral",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "UpdateFinalCountEast",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "UpdateFinalCountWest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "UpdateFinalCountSouth",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT = NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS = NULL;"
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/CentralDataMigrate')]",
-				"[concat(variables('factoryId'), '/dataflows/EastDataMigrate')]",
-				"[concat(variables('factoryId'), '/dataflows/SouthDataMigrate')]",
-				"[concat(variables('factoryId'), '/dataflows/WestDataMigrate')]"
 			]
 		}
 	]

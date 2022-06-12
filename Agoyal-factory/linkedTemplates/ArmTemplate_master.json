@@ -19,14 +19,6 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureTableStorage1'"
 		},
-		"AzureTableStorage2_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'AzureTableStorage2'"
-		},
-		"linkedService1_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
-		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -62,12 +54,6 @@
 					},
 					"AzureTableStorage1_connectionString": {
 						"value": "[parameters('AzureTableStorage1_connectionString')]"
-					},
-					"AzureTableStorage2_connectionString": {
-						"value": "[parameters('AzureTableStorage2_connectionString')]"
-					},
-					"linkedService1_connectionString": {
-						"value": "[parameters('linkedService1_connectionString')]"
 					}
 				}
 			},

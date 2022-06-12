@@ -13,12 +13,6 @@
 		},
 		"AzureTableStorage1_connectionString": {
 			"value": ""
-		},
-		"AzureTableStorage2_connectionString": {
-			"value": ""
-		},
-		"linkedService1_connectionString": {
-			"value": ""
 		}
 	}
 }
