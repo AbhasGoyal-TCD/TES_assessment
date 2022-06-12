@@ -43,5 +43,6 @@
 			"schema": "dbo",
 			"table": "MERGED_DATA_LOGS"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
 }

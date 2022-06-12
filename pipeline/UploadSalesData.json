@@ -70,10 +70,39 @@
 									"coreCount": 8,
 									"computeType": "General"
 								},
-								"traceLevel": "Fine",
-								"continuationSettings": {
-									"customizedCheckpointKey": "ef152be8-52ec-4220-ac11-85376078cfe0"
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "UpdateFinalCountCentral",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "UploadCentralSource",
+									"dependencyConditions": [
+										"Succeeded"
+									]
 								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "NonQuery",
+										"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+									}
+								]
 							}
 						}
 					]
@@ -147,10 +176,39 @@
 									"coreCount": 8,
 									"computeType": "General"
 								},
-								"traceLevel": "Fine",
-								"continuationSettings": {
-									"customizedCheckpointKey": "e9c00a10-82a8-434b-b173-eca33cefea90"
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "UpdateFinalCountWest",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "WestSourceData",
+									"dependencyConditions": [
+										"Succeeded"
+									]
 								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "NonQuery",
+										"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+									}
+								]
 							}
 						}
 					]
@@ -227,10 +285,39 @@
 									"coreCount": 8,
 									"computeType": "General"
 								},
-								"traceLevel": "Fine",
-								"continuationSettings": {
-									"customizedCheckpointKey": "7a95dc4d-1042-47de-8586-80766336a446"
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "UpdateFinalCountEast",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "EastDataMigrate",
+									"dependencyConditions": [
+										"Succeeded"
+									]
 								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "NonQuery",
+										"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+									}
+								]
 							}
 						}
 					]
@@ -302,18 +389,97 @@
 									"coreCount": 8,
 									"computeType": "General"
 								},
-								"traceLevel": "Fine",
-								"continuationSettings": {
-									"customizedCheckpointKey": "3a70aa30-07fa-4ac1-9bb7-ddea8494fed5"
-								}
+								"traceLevel": "Fine"
 							}
+						},
+						{
+							"name": "UpdateFinalCountSouth",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "SouthDataMigrate",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "FixNullValues",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "VerifySouthSourceCount",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "VerifyEastSourceCount",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "VerifyWestSourceCount",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "VerifyCentralSourceCount",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT is NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS is NULL;\n"
 						}
 					]
 				}
 			}
 		],
 		"annotations": [],
-		"lastPublishTime": "2022-06-10T10:24:06Z"
+		"lastPublishTime": "2022-06-12T12:20:18Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }
