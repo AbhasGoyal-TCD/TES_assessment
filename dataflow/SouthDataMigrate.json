@@ -53,10 +53,10 @@
 					"name": "SourceRowCount"
 				},
 				{
-					"name": "ErrorRowCount"
+					"name": "ErrorRowCounts"
 				},
 				{
-					"name": "DuplicateRowCount"
+					"name": "DuplicateRowCounts"
 				},
 				{
 					"name": "AddDuplicateRows"
@@ -66,9 +66,6 @@
 				},
 				{
 					"name": "FlattenandRenameColumns"
-				},
-				{
-					"name": "FixNullValues"
 				}
 			],
 			"scriptLines": [
@@ -113,16 +110,16 @@
 				"     RowCount = sum(1)) ~> SourceRowCount",
 				"RowswithNulls@Ignore aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
-				"     ErrorRowCount = sum(1)) ~> ErrorRowCount",
+				"     ErrorRowCount = sum(1)) ~> ErrorRowCounts",
 				"RemoveDuplicates aggregate(groupBy(Source_File,",
 				"          TimeStamp),",
-				"     DuplicateRowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
-				"SourceRowCount, DuplicateRowCount join(SourceRowCount@Source_File == DuplicateRowCount@Source_File,",
+				"     DuplicateRowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCounts",
+				"SourceRowCount, DuplicateRowCounts join(SourceRowCount@Source_File == DuplicateRowCounts@Source_File,",
 				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> AddDuplicateRows",
-				"AddDuplicateRows, ErrorRowCount join(SourceRowCount@Source_File == ErrorRowCount@Source_File,",
+				"AddDuplicateRows, ErrorRowCounts join(SourceRowCount@Source_File == ErrorRowCounts@Source_File,",
 				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
@@ -145,8 +142,6 @@
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> FlattenandRenameColumns",
-				"AddErrorRoes derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
-				"          ErrorRowCount = iif(isNull(ErrorRowCount),0,toInteger(ErrorRowCount))) ~> FixNullValues",
 				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -212,7 +207,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> InsertinCSV",
-				"FixNullValues sink(allowSchemaDrift: false,",
+				"AddErrorRoes sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
 				"          SOURCE_FILE as string,",
@@ -234,8 +229,8 @@
 				"          SOURCE_FILE = SourceRowCount@Source_File,",
 				"          TIMESTAMP = SourceRowCount@TimeStamp,",
 				"          SOURCE_ROW_COUNT = SourceRowCount@RowCount,",
-				"          ERROR_ROWS = ErrorRowCount@ErrorRowCount,",
-				"          DUPLICATE_ROW_COUNT = DuplicateRowCount@DuplicateRowCount",
+				"          ERROR_ROWS = ErrorRowCounts@ErrorRowCount,",
+				"          DUPLICATE_ROW_COUNT = DuplicateRowCounts@DuplicateRowCount",
 				"     )) ~> AddLogs"
 			]
 		}

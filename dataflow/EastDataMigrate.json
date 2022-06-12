@@ -66,9 +66,6 @@
 				},
 				{
 					"name": "AddErrorRoes"
-				},
-				{
-					"name": "FixNullValues"
 				}
 			],
 			"scriptLines": [
@@ -155,8 +152,6 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> AddErrorRoes",
-				"AddErrorRoes derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
-				"          ErrorRowCount = iif(isNull(ErrorRowCount),0,toInteger(ErrorRowCount))) ~> FixNullValues",
 				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -222,7 +217,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> InsertinCSV",
-				"FixNullValues sink(allowSchemaDrift: false,",
+				"AddErrorRoes sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
 				"          SOURCE_FILE as string,",
