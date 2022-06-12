@@ -105,89 +105,66 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/SalesSQL')]",
+			"name": "[concat(parameters('factoryName'), '/CentralSource')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
+					"referenceName": "AzureBlobStorage1",
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "AzureSqlTable",
+				"type": "Excel",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "Central_Data",
+						"container": "tes-rawdata"
+					},
+					"sheetIndex": 0,
+					"firstRowAsHeader": true
+				},
 				"schema": [
 					{
-						"name": "Order_ID",
-						"type": "nvarchar"
+						"type": "String"
 					},
 					{
-						"name": "Order_Date",
-						"type": "date"
+						"type": "String"
 					},
 					{
-						"name": "Ship_Date",
-						"type": "date"
+						"type": "String"
 					},
 					{
-						"name": "Ship_Mode",
-						"type": "nvarchar"
+						"type": "String"
 					},
 					{
-						"name": "Customer_ID",
-						"type": "nvarchar"
+						"type": "String"
 					},
 					{
-						"name": "Segment",
-						"type": "nvarchar"
+						"type": "String"
 					},
 					{
-						"name": "Postal_Code",
-						"type": "int",
-						"precision": 10
+						"type": "String"
 					},
 					{
-						"name": "Product_ID",
-						"type": "nvarchar"
+						"type": "String"
 					},
 					{
-						"name": "SALES",
-						"type": "decimal",
-						"precision": 20,
-						"scale": 2
+						"type": "String"
 					},
 					{
-						"name": "QUANTITY",
-						"type": "int",
-						"precision": 10
+						"type": "String"
 					},
 					{
-						"name": "Discount",
-						"type": "float",
-						"precision": 15
+						"type": "String"
 					},
 					{
-						"name": "Profit",
-						"type": "float",
-						"precision": 15
-					},
-					{
-						"name": "Create_Timestamp",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
-					},
-					{
-						"name": "SOURCE_FILE",
-						"type": "nvarchar"
+						"type": "String"
 					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "MERGED_DATA"
-				}
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
 			]
 		},
 		{
@@ -397,7 +374,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/CentralSource')]",
+			"name": "[concat(parameters('factoryName'), '/DumpRowstobeFixed')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -406,15 +383,17 @@
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "Excel",
+				"type": "DelimitedText",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"folderPath": "Central_Data",
+						"fileName": "Error_Rows.csv",
+						"folderPath": "Rows_to_be_Fixed",
 						"container": "tes-rawdata"
 					},
-					"sheetIndex": 0,
-					"firstRowAsHeader": true
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
 				},
 				"schema": [
 					{
@@ -460,7 +439,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/SouthSource')]",
+			"name": "[concat(parameters('factoryName'), '/EastSource')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -469,64 +448,68 @@
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "Json",
+				"type": "DelimitedText",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"folderPath": "South_Data",
+						"folderPath": "East_Data",
 						"container": "tes-rawdata"
 					},
-					"encodingName": "UTF-8"
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
 				},
-				"schema": {
-					"type": "object",
-					"properties": {
-						"sample_data_south": {
-							"type": "array",
-							"items": {
-								"type": "object",
-								"properties": {
-									"Order": {
-										"type": "string"
-									},
-									"Date": {
-										"type": "string"
-									},
-									"Date Shipped": {
-										"type": "string"
-									},
-									"Shipping Method": {
-										"type": "string"
-									},
-									"Customer Number": {
-										"type": "string"
-									},
-									"Segment": {
-										"type": "string"
-									},
-									"Postal Code 1": {
-										"type": "string"
-									},
-									"Product ID": {
-										"type": "string"
-									},
-									"Sales": {
-										"type": "string"
-									},
-									"Quantity": {
-										"type": "string"
-									},
-									"Discount": {
-										"type": "string"
-									},
-									"Profit": {
-										"type": "string"
-									}
-								}
-							}
-						}
+				"schema": [
+					{
+						"name": "order_number",
+						"type": "String"
+					},
+					{
+						"name": "ord_date",
+						"type": "String"
+					},
+					{
+						"name": "ship_date",
+						"type": "String"
+					},
+					{
+						"name": "ship_type",
+						"type": "String"
+					},
+					{
+						"name": "customer_key",
+						"type": "String"
+					},
+					{
+						"name": "customer_section",
+						"type": "String"
+					},
+					{
+						"name": "post_code",
+						"type": "String"
+					},
+					{
+						"name": "product_id",
+						"type": "String"
+					},
+					{
+						"name": "sales",
+						"type": "String"
+					},
+					{
+						"name": "#_items",
+						"type": "String"
+					},
+					{
+						"name": "reduction",
+						"type": "String"
+					},
+					{
+						"name": "total",
+						"type": "String"
 					}
-				}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
