@@ -10,6 +10,20 @@
 						"type": "DatasetReference"
 					},
 					"name": "ReadSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DatavalidationSegment",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSegmentAllowed"
+				},
+				{
+					"dataset": {
+						"referenceName": "DatavalidationShipMode",
+						"type": "DatasetReference"
+					},
+					"name": "ReadShipModeAllowed"
 				}
 			],
 			"sinks": [
@@ -66,6 +80,12 @@
 				},
 				{
 					"name": "FlattenandRenameColumns"
+				},
+				{
+					"name": "MergeSegment"
+				},
+				{
+					"name": "MergeShipMode"
 				}
 			],
 			"scriptLines": [
@@ -78,10 +98,22 @@
 				"     rowUrlColumn: 'Source_File',",
 				"     documentForm: 'documentPerLine',",
 				"     mode: 'read') ~> ReadSource",
+				"source(output(",
+				"          {Segment Allowed} as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+				"source(output(",
+				"          {Ship Mode Allowed} as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 				"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-				"          {Ship Mode},",
+				"          {Ship Mode Allowed},",
 				"          {Customer ID},",
-				"          Segment,",
+				"          {Segment Allowed},",
 				"          {Product ID},",
 				"          Source_File,",
 				"          TimeStamp,",
@@ -93,9 +125,9 @@
 				"          {Discount Converted},",
 				"          {Profit Converted}),",
 				"     Dummy = sum(1)) ~> RemoveDuplicates",
-				"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+				"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 				"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-				"FlattenandRenameColumns derive(TimeStamp = currentUTC(),",
+				"MergeShipMode derive(TimeStamp = currentUTC(),",
 				"          {Order Date Converted} = iif(length({Order Date}) ==9,toDate(replace({Order Date}, '202', '/2'),'dd/MM/yy'),toDate({Order Date} ,'MM/dd/yy')),",
 				"          {Ship Date Converted} = toDate({Ship Date},'MM/dd/yy'),",
 				"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -140,6 +172,16 @@
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> FlattenandRenameColumns",
+				"FlattenandRenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+				"     joinType:'left',",
+				"     matchType:'fuzzy',",
+				"     ignoreSpaces: true,",
+				"     broadcast: 'off')~> MergeSegment",
+				"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+				"     joinType:'left',",
+				"     matchType:'fuzzy',",
+				"     ignoreSpaces: true,",
+				"     broadcast: 'auto')~> MergeShipMode",
 				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -175,9 +217,9 @@
 				"          Order_ID = {Order ID},",
 				"          Order_Date = {Order Date Converted},",
 				"          Ship_Date = {Ship Date Converted},",
-				"          Ship_Mode = {Ship Mode},",
+				"          Ship_Mode = {Ship Mode Allowed},",
 				"          Customer_ID = {Customer ID},",
-				"          Segment,",
+				"          Segment = {Segment Allowed},",
 				"          Postal_Code = {Postal Code Converted},",
 				"          Product_ID = {Product ID},",
 				"          SALES = {Sales Converted},",

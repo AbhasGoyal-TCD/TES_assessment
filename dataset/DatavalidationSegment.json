@@ -1,0 +1,26 @@
+{
+	"name": "DatavalidationSegment",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Segment",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "Data Validation.xlsx",
+				"container": "tesmetadata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "Segment Allowed",
+				"type": "String"
+			}
+		]
+	}
+}
