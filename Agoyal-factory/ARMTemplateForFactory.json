@@ -25,829 +25,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/UploadMetadata')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "UploadMetadataCompanies",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "CompaniesMetadata",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadCompaniesSource": {},
-									"ReadCompaniesLoaded": {},
-									"InsertinSQL": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "UploadMetadataPostal_Codes",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "PostalCodesMetadata",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"ReadSQL": {},
-									"InsertinSQL": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "UploadMetadataProducts",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProduct_Types",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ProductsMetadata",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"ReadSQL": {},
-									"InsertinSQL": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "UploadMetadataProduct_Types",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "ProductTypesMetadata",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ReadSource": {},
-									"ReadSQL": {},
-									"InsertinSQL": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "Check1stValue",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProducts",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "INSERT INTO Products \nSelect 'FUR-BO-10001810','','BookCases'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-BO-10001810')"
-								}
-							]
-						}
-					},
-					{
-						"name": "Check2ndValue",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProducts",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "INSERT INTO Products \nSelect 'FUR-TA-10000199','','Tables'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-TA-10000199')"
-								}
-							]
-						}
-					},
-					{
-						"name": "Check3rdValue",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProducts",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "INSERT INTO Products \nSelect 'Product Unknown','','Unknown'\nwhere not exists (select 1 from Products where Product_ID = 'Product Unknown')"
-								}
-							]
-						}
-					},
-					{
-						"name": "Check4thValue",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProduct_Types",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "INSERT INTO Product_Types\nSelect 'Unknown','Unknown'\nwhere not exists (select 1 from Product_Types where Product_Type = 'Unknown' )"
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2022-06-12T11:39:05Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/CompaniesMetadata')]",
-				"[concat(variables('factoryId'), '/dataflows/PostalCodesMetadata')]",
-				"[concat(variables('factoryId'), '/dataflows/ProductsMetadata')]",
-				"[concat(variables('factoryId'), '/dataflows/ProductTypesMetadata')]",
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/UploadSalesData')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "LoadCentralSourceCount",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ExcelSource",
-								"storeSettings": {
-									"type": "AzureBlobStorageReadSettings",
-									"recursive": true,
-									"wildcardFileName": "*.xlsx",
-									"enablePartitionDiscovery": false
-								}
-							},
-							"dataset": {
-								"referenceName": "CentralSource",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "VerifyCentralSourceCount",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "LoadCentralSourceCount",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('LoadCentralSourceCount').output.count,41) \n",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "UploadCentralSource",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "1.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "CentralDataMigrate",
-											"type": "DataFlowReference",
-											"parameters": {},
-											"datasetParameters": {
-												"ReadSource": {},
-												"InsertinSQL": {},
-												"InsertinCSV": {},
-												"AddLogs1": {}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								},
-								{
-									"name": "UpdateFinalCountCentral",
-									"type": "Script",
-									"dependsOn": [
-										{
-											"activity": "UploadCentralSource",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "7.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "AzureSqlDatabase1",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "NonQuery",
-												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
-											}
-										]
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "LoadWestSourceCount",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ExcelSource",
-								"storeSettings": {
-									"type": "AzureBlobStorageReadSettings",
-									"recursive": true,
-									"wildcardFileName": "*.xlsx",
-									"enablePartitionDiscovery": false
-								}
-							},
-							"dataset": {
-								"referenceName": "WestSource",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "VerifyWestSourceCount",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "LoadWestSourceCount",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('LoadWestSourceCount').output.count,48) \n",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "WestSourceData",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "1.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "WestDataMigrate",
-											"type": "DataFlowReference",
-											"parameters": {},
-											"datasetParameters": {
-												"ReadSource": {},
-												"InsertinSQL": {},
-												"InsertinCSV": {},
-												"AddLogs": {}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								},
-								{
-									"name": "UpdateFinalCountWest",
-									"type": "Script",
-									"dependsOn": [
-										{
-											"activity": "WestSourceData",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "7.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "AzureSqlDatabase1",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "NonQuery",
-												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
-											}
-										]
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "LoadEastSourceCount",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobStorageReadSettings",
-									"recursive": true,
-									"wildcardFileName": "*.csv",
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "EastSource",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "VerifyEastSourceCount",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "LoadEastSourceCount",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('LoadEastSourceCount').output.count,41) \n",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "EastDataMigrate",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "1.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "EastDataMigrate",
-											"type": "DataFlowReference",
-											"parameters": {},
-											"datasetParameters": {
-												"ReadSource": {},
-												"InsertinSQL": {},
-												"InsertinCSV": {},
-												"AddLogs": {}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								},
-								{
-									"name": "UpdateFinalCountEast",
-									"type": "Script",
-									"dependsOn": [
-										{
-											"activity": "EastDataMigrate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "7.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "AzureSqlDatabase1",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "NonQuery",
-												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
-											}
-										]
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "LoadSouthSourceCount",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "LoadSouthSourceCount",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"Json": {},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "None",
-							"cacheSinks": {
-								"firstRowOnly": true
-							}
-						}
-					},
-					{
-						"name": "VerifySouthSourceCount",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "LoadSouthSourceCount",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('LoadSouthSourceCount').output.runStatus.output.sink1.value[0].RowCount,25)",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "SouthDataMigrate",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "1.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "SouthDataMigrate",
-											"type": "DataFlowReference",
-											"parameters": {},
-											"datasetParameters": {
-												"ReadSource": {},
-												"InsertinSQL": {},
-												"InsertinCSV": {},
-												"AddLogs": {}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								},
-								{
-									"name": "UpdateFinalCountSouth",
-									"type": "Script",
-									"dependsOn": [
-										{
-											"activity": "SouthDataMigrate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "7.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "AzureSqlDatabase1",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "Query",
-												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
-											}
-										]
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "FixNullValues",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "VerifySouthSourceCount",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "VerifyEastSourceCount",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "VerifyWestSourceCount",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "VerifyCentralSourceCount",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT is NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS is NULL;\n"
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2022-06-12T12:20:18Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/CentralSource')]",
-				"[concat(variables('factoryId'), '/datasets/WestSource')]",
-				"[concat(variables('factoryId'), '/datasets/EastSource')]",
-				"[concat(variables('factoryId'), '/dataflows/LoadSouthSourceCount')]",
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]",
-				"[concat(variables('factoryId'), '/dataflows/CentralDataMigrate')]",
-				"[concat(variables('factoryId'), '/dataflows/WestDataMigrate')]",
-				"[concat(variables('factoryId'), '/dataflows/EastDataMigrate')]",
-				"[concat(variables('factoryId'), '/dataflows/SouthDataMigrate')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/CreateDB')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1032,6 +209,773 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/UploadMetadata')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "UploadMetadataCompanies",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "CompaniesMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadCompaniesSource": {},
+									"ReadCompaniesLoaded": {},
+									"InsertinSQL": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "UploadMetadataPostal_Codes",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "PostalCodesMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadSource": {},
+									"ReadSQL": {},
+									"InsertinSQL": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "UploadMetadataProducts",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "UploadMetadataProduct_Types",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ProductsMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadSource": {},
+									"ReadSQL": {},
+									"InsertinSQL": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "UploadMetadataProduct_Types",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ProductTypesMetadata",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ReadSource": {},
+									"ReadSQL": {},
+									"InsertinSQL": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Addmissingproducts",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "UploadMetadataProducts",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "INSERT INTO Products \nSelect 'FUR-BO-10001810','','BookCases'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-BO-10001810');\n\nINSERT INTO Products \nSelect 'FUR-TA-10000199','','Tables'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-TA-10000199');\n\nINSERT INTO Products \nSelect 'Product Unknown','','Unknown'\nwhere not exists (select 1 from Products where Product_ID = 'Product Unknown');"
+								}
+							]
+						}
+					},
+					{
+						"name": "Addmissingproducttypes",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "UploadMetadataProduct_Types",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "INSERT INTO Product_Types\nSelect 'Unknown','Unknown'\nwhere not exists (select 1 from Product_Types where Product_Type = 'Unknown' )"
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-06-12T11:39:05Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/CompaniesMetadata')]",
+				"[concat(variables('factoryId'), '/dataflows/PostalCodesMetadata')]",
+				"[concat(variables('factoryId'), '/dataflows/ProductsMetadata')]",
+				"[concat(variables('factoryId'), '/dataflows/ProductTypesMetadata')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/UploadSalesData')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LoadCentralSourceCount",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.xlsx",
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "CentralSource",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "VerifyCentralSourceCount",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "LoadCentralSourceCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('LoadCentralSourceCount').output.count,41) \n",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "UploadCentralSource",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "CentralDataMigrate",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
+												"InsertinSQL": {},
+												"InsertinCSV": {},
+												"AddLogs1": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "UpdateFinalCountCentral",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "UploadCentralSource",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "LoadWestSourceCount",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.xlsx",
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "WestSource",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "VerifyWestSourceCount",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "LoadWestSourceCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('LoadWestSourceCount').output.count,48) \n",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "WestSourceData",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "WestDataMigrate",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
+												"InsertinSQL": {},
+												"InsertinCSV": {},
+												"AddLogs": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "UpdateFinalCountWest",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "WestSourceData",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/West_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%') )\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "LoadEastSourceCount",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "EastSource",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "VerifyEastSourceCount",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "LoadEastSourceCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('LoadEastSourceCount').output.count,41) \n",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "EastDataMigrate",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "EastDataMigrate",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
+												"InsertinSQL": {},
+												"InsertinCSV": {},
+												"AddLogs": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "UpdateFinalCountEast",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "EastDataMigrate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/East_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%') )\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "LoadSouthSourceCount",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "LoadSouthSourceCount",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Json": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "None",
+							"cacheSinks": {
+								"firstRowOnly": true
+							}
+						}
+					},
+					{
+						"name": "VerifySouthSourceCount",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "LoadSouthSourceCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('LoadSouthSourceCount').output.runStatus.output.sink1.value[0].RowCount,25)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "SouthDataMigrate",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "SouthDataMigrate",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
+												"InsertinSQL": {},
+												"InsertinCSV": {},
+												"AddLogs": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "UpdateFinalCountSouth",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "SouthDataMigrate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "FixNullValues",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "VerifySouthSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "VerifyEastSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "VerifyWestSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "VerifyCentralSourceCount",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT is NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS is NULL;\n"
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-06-12T12:20:18Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/CentralSource')]",
+				"[concat(variables('factoryId'), '/datasets/WestSource')]",
+				"[concat(variables('factoryId'), '/datasets/EastSource')]",
+				"[concat(variables('factoryId'), '/dataflows/LoadSouthSourceCount')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]",
+				"[concat(variables('factoryId'), '/dataflows/CentralDataMigrate')]",
+				"[concat(variables('factoryId'), '/dataflows/WestDataMigrate')]",
+				"[concat(variables('factoryId'), '/dataflows/EastDataMigrate')]",
+				"[concat(variables('factoryId'), '/dataflows/SouthDataMigrate')]"
 			]
 		},
 		{
@@ -2218,6 +2162,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -2274,6 +2232,12 @@
 						},
 						{
 							"name": "AddErrorRows"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -2296,10 +2260,22 @@
 						"     ignoreNoFilesFound: false,",
 						"     rowUrlColumn: 'Source_File',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -2311,9 +2287,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"RenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = toDate({Order Date},'yyyy-MM-dd'),",
 						"          {Ship Date Converted} = toDate({Ship Date},'yyyy-MM-dd'),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -2357,6 +2333,16 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> AddErrorRows",
+						"RenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -2392,9 +2378,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -2452,6 +2438,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/CentralSource')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]",
 				"[concat(variables('factoryId'), '/datasets/DumpRowstobeFixed')]",
@@ -2587,6 +2575,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -2643,6 +2645,12 @@
 						},
 						{
 							"name": "AddErrorRoes"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -2665,10 +2673,22 @@
 						"     ignoreNoFilesFound: false,",
 						"     rowUrlColumn: 'Source_File',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -2680,9 +2700,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Postal Code}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Postal Code}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"RenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = toDate(replace({Order Date},'31/11','30/11'),'dd/MM/yyyy'),",
 						"          {Ship Date Converted} = toDate(iif(length({Ship Date}) == 9, replace({Ship Date},'202','/202'), replace({Ship Date},'31/06','30/06')),'dd/MM/yyyy'),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -2727,6 +2747,16 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> AddErrorRoes",
+						"RenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -2762,9 +2792,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -2822,6 +2852,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/EastSource')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]",
 				"[concat(variables('factoryId'), '/datasets/DumpRowstobeFixed')]",
@@ -3239,6 +3271,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -3295,6 +3341,12 @@
 						},
 						{
 							"name": "FlattenandRenameColumns"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -3307,10 +3359,22 @@
 						"     rowUrlColumn: 'Source_File',",
 						"     documentForm: 'documentPerLine',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -3322,9 +3386,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"FlattenandRenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = iif(length({Order Date}) ==9,toDate(replace({Order Date}, '202', '/2'),'dd/MM/yy'),toDate({Order Date} ,'MM/dd/yy')),",
 						"          {Ship Date Converted} = toDate({Ship Date},'MM/dd/yy'),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -3369,6 +3433,16 @@
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> FlattenandRenameColumns",
+						"FlattenandRenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -3404,9 +3478,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -3464,6 +3538,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/SouthSource')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]",
 				"[concat(variables('factoryId'), '/datasets/DumpRowstobeFixed')]",
@@ -3484,6 +3560,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -3540,6 +3630,12 @@
 						},
 						{
 							"name": "AddErrorRows"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -3562,10 +3658,22 @@
 						"     ignoreNoFilesFound: false,",
 						"     rowUrlColumn: 'Source_File',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -3577,9 +3685,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"RenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = toDate({Order Date},'yyyy-MM-dd'),",
 						"          {Ship Date Converted} = iif(equals(locate('/',{Ship Mode}),0),toDate({Ship Date},'yyyy-MM-dd'),toDate(replace({Ship Date},'32/04','30/04'), 'dd/MM/yyyy')),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -3624,6 +3732,16 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> AddErrorRows",
+						"RenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -3659,9 +3777,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -3719,6 +3837,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/WestSource')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]",
 				"[concat(variables('factoryId'), '/datasets/DumpRowstobeFixed')]",
@@ -3731,6 +3851,68 @@
 			"apiVersion": "2018-06-01",
 			"properties": {},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DatavalidationSegment')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Segment",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "Data Validation.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "Segment Allowed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DatavalidationShipMode')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Ship Mode",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "Data Validation.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "Ship Mode Allowed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
 		}
 	]
 }

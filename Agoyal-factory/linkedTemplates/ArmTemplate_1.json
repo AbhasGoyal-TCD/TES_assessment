@@ -425,6 +425,64 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DatavalidationSegment')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Segment",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "Data Validation.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "Segment Allowed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DatavalidationShipMode')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Ship Mode",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "Data Validation.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "Ship Mode Allowed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/CentralDataMigrate')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -438,6 +496,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -494,6 +566,12 @@
 						},
 						{
 							"name": "AddErrorRows"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -516,10 +594,22 @@
 						"     ignoreNoFilesFound: false,",
 						"     rowUrlColumn: 'Source_File',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -531,9 +621,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"RenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = toDate({Order Date},'yyyy-MM-dd'),",
 						"          {Ship Date Converted} = toDate({Ship Date},'yyyy-MM-dd'),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -577,6 +667,16 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> AddErrorRows",
+						"RenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -612,9 +712,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -671,6 +771,8 @@
 				}
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/datasets/SalesLogsSQL')]"
 			]
@@ -801,6 +903,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -857,6 +973,12 @@
 						},
 						{
 							"name": "AddErrorRoes"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -879,10 +1001,22 @@
 						"     ignoreNoFilesFound: false,",
 						"     rowUrlColumn: 'Source_File',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -894,9 +1028,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Postal Code}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Postal Code}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"RenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = toDate(replace({Order Date},'31/11','30/11'),'dd/MM/yyyy'),",
 						"          {Ship Date Converted} = toDate(iif(length({Ship Date}) == 9, replace({Ship Date},'202','/202'), replace({Ship Date},'31/06','30/06')),'dd/MM/yyyy'),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -941,6 +1075,16 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> AddErrorRoes",
+						"RenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -976,9 +1120,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -1035,6 +1179,8 @@
 				}
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/datasets/SalesLogsSQL')]"
 			]
@@ -1441,6 +1587,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -1497,6 +1657,12 @@
 						},
 						{
 							"name": "FlattenandRenameColumns"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -1509,10 +1675,22 @@
 						"     rowUrlColumn: 'Source_File',",
 						"     documentForm: 'documentPerLine',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -1524,9 +1702,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"FlattenandRenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = iif(length({Order Date}) ==9,toDate(replace({Order Date}, '202', '/2'),'dd/MM/yy'),toDate({Order Date} ,'MM/dd/yy')),",
 						"          {Ship Date Converted} = toDate({Ship Date},'MM/dd/yy'),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -1571,6 +1749,16 @@
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> FlattenandRenameColumns",
+						"FlattenandRenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -1606,9 +1794,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -1666,6 +1854,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/SouthSource')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/datasets/SalesLogsSQL')]"
 			]
@@ -1684,6 +1874,20 @@
 								"type": "DatasetReference"
 							},
 							"name": "ReadSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationSegment",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSegmentAllowed"
+						},
+						{
+							"dataset": {
+								"referenceName": "DatavalidationShipMode",
+								"type": "DatasetReference"
+							},
+							"name": "ReadShipModeAllowed"
 						}
 					],
 					"sinks": [
@@ -1740,6 +1944,12 @@
 						},
 						{
 							"name": "AddErrorRows"
+						},
+						{
+							"name": "MergeSegment"
+						},
+						{
+							"name": "MergeShipMode"
 						}
 					],
 					"scriptLines": [
@@ -1762,10 +1972,22 @@
 						"     ignoreNoFilesFound: false,",
 						"     rowUrlColumn: 'Source_File',",
 						"     mode: 'read') ~> ReadSource",
+						"source(output(",
+						"          {Segment Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadSegmentAllowed",
+						"source(output(",
+						"          {Ship Mode Allowed} as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     ignoreNoFilesFound: false) ~> ReadShipModeAllowed",
 						"RowswithNulls@Retain aggregate(groupBy({Order ID},",
-						"          {Ship Mode},",
+						"          {Ship Mode Allowed},",
 						"          {Customer ID},",
-						"          Segment,",
+						"          {Segment Allowed},",
 						"          {Product ID},",
 						"          Source_File,",
 						"          TimeStamp,",
@@ -1777,9 +1999,9 @@
 						"          {Discount Converted},",
 						"          {Profit Converted}),",
 						"     Dummy = sum(1)) ~> RemoveDuplicates",
-						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode}) && !isNull({Customer ID}) && !isNull(Segment) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
+						"AddColumns split(!isNull({Order ID}) && !isNull({Order Date Converted}) && !isNull({Ship Date Converted}) && !isNull({Ship Mode Allowed}) && !isNull({Customer ID}) && !isNull({Segment Allowed}) && !isNull({Postal Code Converted}) && !isNull({Product ID}) && !isNull({Sales Converted}) && !isNull({Quantity Converted}) && !isNull({Discount Converted}) && !isNull({Profit Converted}),",
 						"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
-						"RenameColumns derive(TimeStamp = currentUTC(),",
+						"MergeShipMode derive(TimeStamp = currentUTC(),",
 						"          {Order Date Converted} = toDate({Order Date},'yyyy-MM-dd'),",
 						"          {Ship Date Converted} = iif(equals(locate('/',{Ship Mode}),0),toDate({Ship Date},'yyyy-MM-dd'),toDate(replace({Ship Date},'32/04','30/04'), 'dd/MM/yyyy')),",
 						"          {Postal Code Converted} = toInteger({Postal Code}),",
@@ -1824,6 +2046,16 @@
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> AddErrorRows",
+						"RenameColumns, ReadSegmentAllowed join(fuzzyCompare(Segment, {Segment Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeSegment",
+						"MergeSegment, ReadShipModeAllowed join(fuzzyCompare({Ship Mode}, {Ship Mode Allowed}, 85.00),",
+						"     joinType:'left',",
+						"     matchType:'fuzzy',",
+						"     ignoreSpaces: true,",
+						"     broadcast: 'off')~> MergeShipMode",
 						"RemoveDuplicates sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
@@ -1859,9 +2091,9 @@
 						"          Order_ID = {Order ID},",
 						"          Order_Date = {Order Date Converted},",
 						"          Ship_Date = {Ship Date Converted},",
-						"          Ship_Mode = {Ship Mode},",
+						"          Ship_Mode = {Ship Mode Allowed},",
 						"          Customer_ID = {Customer ID},",
-						"          Segment,",
+						"          Segment = {Segment Allowed},",
 						"          Postal_Code = {Postal Code Converted},",
 						"          Product_ID = {Product ID},",
 						"          SALES = {Sales Converted},",
@@ -1919,6 +2151,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/WestSource')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationSegment')]",
+				"[concat(variables('factoryId'), '/datasets/DatavalidationShipMode')]",
 				"[concat(variables('factoryId'), '/datasets/SalesSQL')]",
 				"[concat(variables('factoryId'), '/datasets/SalesLogsSQL')]"
 			]
@@ -2061,7 +2295,7 @@
 						}
 					},
 					{
-						"name": "Check1stValue",
+						"name": "Addmissingproducts",
 						"type": "Script",
 						"dependsOn": [
 							{
@@ -2087,77 +2321,13 @@
 							"scripts": [
 								{
 									"type": "NonQuery",
-									"text": "INSERT INTO Products \nSelect 'FUR-BO-10001810','','BookCases'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-BO-10001810')"
+									"text": "INSERT INTO Products \nSelect 'FUR-BO-10001810','','BookCases'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-BO-10001810');\n\nINSERT INTO Products \nSelect 'FUR-TA-10000199','','Tables'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-TA-10000199');\n\nINSERT INTO Products \nSelect 'Product Unknown','','Unknown'\nwhere not exists (select 1 from Products where Product_ID = 'Product Unknown');"
 								}
 							]
 						}
 					},
 					{
-						"name": "Check2ndValue",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProducts",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "INSERT INTO Products \nSelect 'FUR-TA-10000199','','Tables'\nwhere not exists (select 1 from Products where Product_ID = 'FUR-TA-10000199')"
-								}
-							]
-						}
-					},
-					{
-						"name": "Check3rdValue",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "UploadMetadataProducts",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "AzureSqlDatabase1",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "NonQuery",
-									"text": "INSERT INTO Products \nSelect 'Product Unknown','','Unknown'\nwhere not exists (select 1 from Products where Product_ID = 'Product Unknown')"
-								}
-							]
-						}
-					},
-					{
-						"name": "Check4thValue",
+						"name": "Addmissingproducttypes",
 						"type": "Script",
 						"dependsOn": [
 							{
@@ -2276,6 +2446,8 @@
 											"parameters": {},
 											"datasetParameters": {
 												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
 												"InsertinSQL": {},
 												"InsertinCSV": {},
 												"AddLogs1": {}
@@ -2391,6 +2563,8 @@
 											"parameters": {},
 											"datasetParameters": {
 												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
 												"InsertinSQL": {},
 												"InsertinCSV": {},
 												"AddLogs": {}
@@ -2509,6 +2683,8 @@
 											"parameters": {},
 											"datasetParameters": {
 												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
 												"InsertinSQL": {},
 												"InsertinCSV": {},
 												"AddLogs": {}
@@ -2627,6 +2803,8 @@
 											"parameters": {},
 											"datasetParameters": {
 												"ReadSource": {},
+												"ReadSegmentAllowed": {},
+												"ReadShipModeAllowed": {},
 												"InsertinSQL": {},
 												"InsertinCSV": {},
 												"AddLogs": {}
