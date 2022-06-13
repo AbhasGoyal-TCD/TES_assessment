@@ -269,8 +269,8 @@
 				"          SOURCE_FILE = SourceRowCount@Source_File,",
 				"          TIMESTAMP = SourceRowCount@TimeStamp,",
 				"          SOURCE_ROW_COUNT = RowCount,",
-				"          ERROR_ROWS = DuplicateRowCount,",
-				"          DUPLICATE_ROW_COUNT = ErrorRowCount",
+				"          ERROR_ROWS = ErrorRowCount,",
+				"          DUPLICATE_ROW_COUNT = DuplicateRowCount",
 				"     )) ~> AddLogs"
 			]
 		}
