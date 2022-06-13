@@ -191,7 +191,7 @@
 				"     joinType:'left',",
 				"     matchType:'fuzzy',",
 				"     ignoreSpaces: true,",
-				"     broadcast: 'auto')~> MergeShipMode",
+				"     broadcast: 'off')~> MergeShipMode",
 				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
