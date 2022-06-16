@@ -123,7 +123,7 @@
 				"     broadcast: 'auto')~> CheckUpdate",
 				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company!=FilterExistingRows@Retain@Company||FilterExistingRows@Retain@contact!=FilterExistingRows@Retain@Contact||FilterExistingRows@Retain@region!=FilterExistingRows@Retain@Region)) ~> MarkUpdates",
 				"CheckforDuplicates derive(company_id = toInteger(company_id)) ~> TransformType",
-				"CheckUpdate split((CheckforDuplicates@company != ReadSQL@Company || CheckforDuplicates@contact != ReadSQL@Contact || CheckforDuplicates@region != ReadSQL@Region) \r",
+				"CheckUpdate split((isNull(ReadSQL@Company_ID) || (CheckforDuplicates@company != ReadSQL@Company || CheckforDuplicates@contact != ReadSQL@Contact || CheckforDuplicates@region != ReadSQL@Region)) \r",
 				"&& (!isNull(TransformType@company_id) && !isNull(CheckforDuplicates@company) && !isNull(CheckforDuplicates@contact) && !isNull(CheckforDuplicates@region)),",
 				"     isNull(ReadSQL@Company_ID) && (isNull(CheckforDuplicates@company) || isNull(CheckforDuplicates@contact) || isNull(CheckforDuplicates@region)),",
 				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",

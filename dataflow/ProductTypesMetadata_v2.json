@@ -114,7 +114,7 @@
 				"     broadcast: 'auto')~> CheckUpdate",
 				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@product_category!=FilterExistingRows@Retain@Product_Category\r",
 				")) ~> MarkUpdates",
-				"CheckUpdate split((CheckforDuplicates@product_category != CheckforDuplicates@product_category ) \r",
+				"CheckUpdate split((isNull(CheckforDuplicates@product_type) || CheckforDuplicates@product_category != CheckforDuplicates@product_category ) \r",
 				"&& (!isNull(CheckforDuplicates@product_type) && !isNull(CheckforDuplicates@product_category)),",
 				"     (isNull(CheckforDuplicates@product_type) || isNull(CheckforDuplicates@product_category) ),",
 				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",

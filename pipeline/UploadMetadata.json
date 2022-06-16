@@ -103,7 +103,8 @@
 					"dataset": {
 						"referenceName": "CompaniesExcel",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
@@ -130,7 +131,8 @@
 					"dataset": {
 						"referenceName": "PostalCodesExcel",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
@@ -147,7 +149,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(activity('LoadPostalCodeCount').output.count,631 )",
+						"value": "@equals(activity('LoadPostalCodeCount').output.count,632 )",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
@@ -234,7 +236,8 @@
 					"dataset": {
 						"referenceName": "ProductTypesExcel",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
@@ -397,7 +400,8 @@
 					"dataset": {
 						"referenceName": "ProductsExcel",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
