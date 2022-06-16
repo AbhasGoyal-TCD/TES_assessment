@@ -125,7 +125,7 @@
 				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@state!=FilterExistingRows@Retain@State||FilterExistingRows@Retain@region!=FilterExistingRows@Retain@Region||FilterExistingRows@Retain@country!=FilterExistingRows@Retain@Country||FilterExistingRows@Retain@Country_Region!=FilterExistingRows@Retain@Country_Region)) ~> MarkUpdates",
 				"CheckforDuplicates derive(postal_code = toInteger(postal_code),",
 				"          Country_Region = case(region == 'East', 'Eastern US', case(region == 'West', 'Western US', case(region == 'Central', 'Central US', case(region == 'South', 'Southern US', ''))))) ~> TransformType",
-				"CheckUpdate split((isNull(TransformType@postal_code) || (CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region) )\r",
+				"CheckUpdate split((isNull(ReadSQL@Postal_Code) || (CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region) )\r",
 				"&& (!isNull(TransformType@postal_code) && !isNull(CheckforDuplicates@state) && !isNull(CheckforDuplicates@region) && !isNull(CheckforDuplicates@country) && !isNull(TransformType@Country_Region)),",
 				"     (isNull(TransformType@postal_code) || isNull(CheckforDuplicates@state) || isNull(CheckforDuplicates@region) || isNull(CheckforDuplicates@country) || isNull(TransformType@Country_Region)),",
 				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",
