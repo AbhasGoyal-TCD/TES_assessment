@@ -142,7 +142,7 @@
 				"     disjoint: false) ~> RowswithNulls@(Retain, Ignore)",
 				"MergeShipMode derive(TimeStamp = currentUTC(),",
 				"          {Order Date Converted} = toDate({Order Date},'yyyy-MM-dd'),",
-				"          {Ship Date Converted} = iif(equals(locate('/',{Ship Mode}),0),toDate({Ship Date},'yyyy-MM-dd'),toDate(replace({Ship Date},'32/04','30/04'), 'dd/MM/yyyy')),",
+				"          {Ship Date Converted} = iif(equals(locate('/',{Ship Mode}),0),toDate({Ship Date},'yyyy-MM-dd'),toDate(replace({Ship Date},'32','30'), 'dd/MM/yyyy')),",
 				"          {Postal Code Converted} = toInteger({Postal Code}),",
 				"          {Sales Converted} = toDouble(Sales),",
 				"          {Quantity Converted} = toInteger(regexReplace(Quantity,'[^.0-9]','')),",
