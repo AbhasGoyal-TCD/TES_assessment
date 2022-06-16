@@ -1,0 +1,148 @@
+{
+	"name": "UploadCentralSalesData",
+	"properties": {
+		"activities": [
+			{
+				"name": "LoadCentralSourceCount",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFileName": "*.xlsx",
+							"enablePartitionDiscovery": false
+						}
+					},
+					"dataset": {
+						"referenceName": "CentralSource",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "VerifyCentralSourceCount",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "LoadCentralSourceCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('LoadCentralSourceCount').output.count,41) \n",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "UploadCentralSource",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "CentralDataMigrate",
+									"type": "DataFlowReference"
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "UpdateFinalCountCentral",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "UploadCentralSource",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "NonQuery",
+										"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/Central_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%') )\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "FixNullValues",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "VerifyCentralSourceCount",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT is NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS is NULL;\n"
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-06-12T12:20:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
