@@ -25,7 +25,25 @@
 						"referenceName": "CompaniesSQL",
 						"type": "DatasetReference"
 					},
-					"name": "InsertinSQL"
+					"name": "InsertinSQL",
+					"rejectedDataLinkedService": {
+						"referenceName": "AzureBlobStorage1",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"dataset": {
+						"referenceName": "DumpNullMetaRows",
+						"type": "DatasetReference"
+					},
+					"name": "RecordNullRows"
+				},
+				{
+					"dataset": {
+						"referenceName": "MetaDataLogs",
+						"type": "DatasetReference"
+					},
+					"name": "AddLogs"
 				}
 			],
 			"transformations": [
@@ -43,6 +61,30 @@
 				},
 				{
 					"name": "FilterExistingRows"
+				},
+				{
+					"name": "SourceRowCount"
+				},
+				{
+					"name": "DuplicateRowCount"
+				},
+				{
+					"name": "ErrorRowCount"
+				},
+				{
+					"name": "IgnoreRowCount"
+				},
+				{
+					"name": "MergeDuplicateRows"
+				},
+				{
+					"name": "MergeErrorRows"
+				},
+				{
+					"name": "MergeIgnoreRows"
+				},
+				{
+					"name": "FixNulls"
 				}
 			],
 			"scriptLines": [
@@ -54,7 +96,8 @@
 				"     ),",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: true,",
-				"     ignoreNoFilesFound: false) ~> ReadCompaniesSource",
+				"     ignoreNoFilesFound: false,",
+				"     rowUrlColumn: 'Source_File') ~> ReadCompaniesSource",
 				"source(output(",
 				"          Company_ID as integer,",
 				"          Company as string,",
@@ -68,7 +111,8 @@
 				"ReadCompaniesSource aggregate(groupBy(company_id,",
 				"          company,",
 				"          contact,",
-				"          region),",
+				"          region,",
+				"          Source_File),",
 				"     Dummy = sum(1)) ~> CheckforDuplicatesCompanies",
 				"TransformTypeCompanies, ReadCompaniesLoaded join(TransformTypeCompanies@company_id == ReadCompaniesLoaded@Company_ID,",
 				"     joinType:'left',",
@@ -77,9 +121,36 @@
 				"     broadcast: 'auto')~> CheckCompaniesUpdate",
 				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company!=FilterExistingRows@Retain@Company||FilterExistingRows@Retain@contact!=FilterExistingRows@Retain@Contact||FilterExistingRows@Retain@region!=FilterExistingRows@Retain@Region)) ~> MarkCompanies",
 				"CheckforDuplicatesCompanies derive(company_id = toInteger(company_id)) ~> TransformTypeCompanies",
-				"CheckCompaniesUpdate split((TransformTypeCompanies@company_id != ReadCompaniesLoaded@Company_ID || CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region) \r",
-				"|| (isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region)),",
-				"     disjoint: false) ~> FilterExistingRows@(Retain, Ignore)",
+				"CheckCompaniesUpdate split((CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region) \r",
+				"&& (isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region)),",
+				"     isNull(ReadCompaniesLoaded@Company_ID) && (isNull(CheckforDuplicatesCompanies@company) || isNull(CheckforDuplicatesCompanies@contact) || isNull(CheckforDuplicatesCompanies@region)),",
+				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",
+				"ReadCompaniesSource aggregate(groupBy(Source_File),",
+				"     SRowCount = sum(1)) ~> SourceRowCount",
+				"CheckforDuplicatesCompanies aggregate(groupBy(Source_File),",
+				"     DuplicateRowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
+				"FilterExistingRows@FilterNullRows aggregate(groupBy(Source_File),",
+				"     ERowcount = sum(1)) ~> ErrorRowCount",
+				"FilterExistingRows@Ignore aggregate(groupBy(Source_File),",
+				"     IRowCount = sum(1)) ~> IgnoreRowCount",
+				"SourceRowCount, DuplicateRowCount join(SourceRowCount@Source_File == DuplicateRowCount@Source_File,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeDuplicateRows",
+				"MergeDuplicateRows, ErrorRowCount join(SourceRowCount@Source_File == ErrorRowCount@Source_File,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeErrorRows",
+				"MergeErrorRows, IgnoreRowCount join(SourceRowCount@Source_File == IgnoreRowCount@Source_File,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeIgnoreRows",
+				"MergeIgnoreRows derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
+				"          ERowcount = iif(isNull(ERowcount),0,toInteger(ERowcount)),",
+				"          IRowCount = iif(isNull(IRowCount),0,toInteger(IRowCount))) ~> FixNulls",
 				"MarkCompanies sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -96,13 +167,46 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
+				"     errorHandlingOption: 'allErrors',",
+				"     outputRejectedData: true,",
+				"     rejectedData_container: 'tesmetadata',",
+				"     transactionCommit: 'single',",
+				"     reportSuccessOnError: false,",
 				"     mapColumn(",
 				"          Company_ID = FilterExistingRows@Retain@company_id,",
 				"          Company = FilterExistingRows@Retain@company,",
 				"          Contact = FilterExistingRows@Retain@contact,",
 				"          Region = FilterExistingRows@Retain@region",
-				"     )) ~> InsertinSQL"
+				"     )) ~> InsertinSQL",
+				"FilterExistingRows@FilterNullRows sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RecordNullRows",
+				"FixNulls sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          SOURCE_FILE as string,",
+				"          SOURCE_ROW_COUNT as integer,",
+				"          ERROR_ROWS as integer,",
+				"          DUPLICATE_ROW_COUNT as integer,",
+				"          IGNORE_ROW_COUNT as integer,",
+				"          FINAL_COUNT as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SOURCE_FILE = SourceRowCount@Source_File,",
+				"          SOURCE_ROW_COUNT = SRowCount,",
+				"          ERROR_ROWS = ERowcount,",
+				"          DUPLICATE_ROW_COUNT = DuplicateRowCount,",
+				"          IGNORE_ROW_COUNT = IRowCount",
+				"     )) ~> AddLogs"
 			]
 		}
 	}

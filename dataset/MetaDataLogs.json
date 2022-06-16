@@ -1,0 +1,46 @@
+{
+	"name": "MetaDataLogs",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "SOURCE_FILE",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SOURCE_ROW_COUNT",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ERROR_ROWS",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "DUPLICATE_ROW_COUNT",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "IGNORE_ROW_COUNT",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FINAL_COUNT",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "META_DATA_LOGS"
+		}
+	}
+}
