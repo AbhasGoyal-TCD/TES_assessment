@@ -155,7 +155,7 @@
 				"MergeIgnoreRows derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
 				"          ERowcount = iif(isNull(ERowcount),0,toInteger(ERowcount)),",
 				"          IRowCount = iif(isNull(IRowCount),0,toInteger(IRowCount))) ~> FixNulls",
-				"ReadSource derive(Source_File = 'PostalCodes') ~> AddSourceFile",
+				"ReadSource derive(Source_File = 'PostalCode') ~> AddSourceFile",
 				"MarkUpdates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
