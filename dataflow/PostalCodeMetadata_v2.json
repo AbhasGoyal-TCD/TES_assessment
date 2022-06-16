@@ -1,5 +1,5 @@
 {
-	"name": "CompaniesMetadata_copy1",
+	"name": "PostalCodeMetadata_v2",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
