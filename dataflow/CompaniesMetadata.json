@@ -85,6 +85,9 @@
 				},
 				{
 					"name": "FixNulls"
+				},
+				{
+					"name": "AddSourceFile"
 				}
 			],
 			"scriptLines": [
@@ -96,8 +99,7 @@
 				"     ),",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: true,",
-				"     ignoreNoFilesFound: false,",
-				"     rowUrlColumn: 'Source_File') ~> ReadCompaniesSource",
+				"     ignoreNoFilesFound: false) ~> ReadCompaniesSource",
 				"source(output(",
 				"          Company_ID as integer,",
 				"          Company as string,",
@@ -108,7 +110,7 @@
 				"     validateSchema: true,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> ReadCompaniesLoaded",
-				"ReadCompaniesSource aggregate(groupBy(company_id,",
+				"AddSourceFile aggregate(groupBy(company_id,",
 				"          company,",
 				"          contact,",
 				"          region,",
@@ -125,7 +127,7 @@
 				"&& (isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region)),",
 				"     isNull(ReadCompaniesLoaded@Company_ID) && (isNull(CheckforDuplicatesCompanies@company) || isNull(CheckforDuplicatesCompanies@contact) || isNull(CheckforDuplicatesCompanies@region)),",
 				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",
-				"ReadCompaniesSource aggregate(groupBy(Source_File),",
+				"AddSourceFile aggregate(groupBy(Source_File),",
 				"     SRowCount = sum(1)) ~> SourceRowCount",
 				"CheckforDuplicatesCompanies aggregate(groupBy(Source_File),",
 				"     DuplicateRowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
@@ -151,6 +153,7 @@
 				"MergeIgnoreRows derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
 				"          ERowcount = iif(isNull(ERowcount),0,toInteger(ERowcount)),",
 				"          IRowCount = iif(isNull(IRowCount),0,toInteger(IRowCount))) ~> FixNulls",
+				"ReadCompaniesSource derive(Source_File = 'Company') ~> AddSourceFile",
 				"MarkCompanies sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
