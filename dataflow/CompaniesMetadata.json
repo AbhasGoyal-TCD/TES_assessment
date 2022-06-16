@@ -9,14 +9,14 @@
 						"referenceName": "CompaniesExcel",
 						"type": "DatasetReference"
 					},
-					"name": "ReadCompaniesSource"
+					"name": "ReadSource"
 				},
 				{
 					"dataset": {
 						"referenceName": "CompaniesSQL",
 						"type": "DatasetReference"
 					},
-					"name": "ReadCompaniesLoaded"
+					"name": "ReadSQL"
 				}
 			],
 			"sinks": [
@@ -48,16 +48,16 @@
 			],
 			"transformations": [
 				{
-					"name": "CheckforDuplicatesCompanies"
+					"name": "CheckforDuplicates"
 				},
 				{
-					"name": "CheckCompaniesUpdate"
+					"name": "CheckUpdate"
 				},
 				{
 					"name": "MarkCompanies"
 				},
 				{
-					"name": "TransformTypeCompanies"
+					"name": "TransformType"
 				},
 				{
 					"name": "FilterExistingRows"
@@ -99,7 +99,7 @@
 				"     ),",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: true,",
-				"     ignoreNoFilesFound: false) ~> ReadCompaniesSource",
+				"     ignoreNoFilesFound: false) ~> ReadSource",
 				"source(output(",
 				"          Company_ID as integer,",
 				"          Company as string,",
@@ -109,27 +109,27 @@
 				"     allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     format: 'table') ~> ReadCompaniesLoaded",
+				"     format: 'table') ~> ReadSQL",
 				"AddSourceFile aggregate(groupBy(company_id,",
 				"          company,",
 				"          contact,",
 				"          region,",
 				"          Source_File),",
-				"     Dummy = sum(1)) ~> CheckforDuplicatesCompanies",
-				"TransformTypeCompanies, ReadCompaniesLoaded join(TransformTypeCompanies@company_id == ReadCompaniesLoaded@Company_ID,",
+				"     Dummy = sum(1)) ~> CheckforDuplicates",
+				"TransformType, ReadSQL join(TransformType@company_id == ReadSQL@Company_ID,",
 				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> CheckCompaniesUpdate",
+				"     broadcast: 'auto')~> CheckUpdate",
 				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company!=FilterExistingRows@Retain@Company||FilterExistingRows@Retain@contact!=FilterExistingRows@Retain@Contact||FilterExistingRows@Retain@region!=FilterExistingRows@Retain@Region)) ~> MarkCompanies",
-				"CheckforDuplicatesCompanies derive(company_id = toInteger(company_id)) ~> TransformTypeCompanies",
-				"CheckCompaniesUpdate split((CheckforDuplicatesCompanies@company != ReadCompaniesLoaded@Company || CheckforDuplicatesCompanies@contact != ReadCompaniesLoaded@Contact || CheckforDuplicatesCompanies@region != ReadCompaniesLoaded@Region) \r",
-				"&& (isNull(ReadCompaniesLoaded@Company_ID) && isNull(ReadCompaniesLoaded@Company) && isNull(ReadCompaniesLoaded@Contact) && isNull(ReadCompaniesLoaded@Region)),",
-				"     isNull(ReadCompaniesLoaded@Company_ID) && (isNull(CheckforDuplicatesCompanies@company) || isNull(CheckforDuplicatesCompanies@contact) || isNull(CheckforDuplicatesCompanies@region)),",
+				"CheckforDuplicates derive(company_id = toInteger(company_id)) ~> TransformType",
+				"CheckUpdate split((CheckforDuplicates@company != ReadSQL@Company || CheckforDuplicates@contact != ReadSQL@Contact || CheckforDuplicates@region != ReadSQL@Region) \r",
+				"&& (!isNull(TransformType@company_id) && !isNull(CheckforDuplicates@company) && !isNull(CheckforDuplicates@contact) && !isNull(CheckforDuplicates@region)),",
+				"     isNull(ReadSQL@Company_ID) && (isNull(CheckforDuplicates@company) || isNull(CheckforDuplicates@contact) || isNull(CheckforDuplicates@region)),",
 				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",
 				"AddSourceFile aggregate(groupBy(Source_File),",
 				"     SRowCount = sum(1)) ~> SourceRowCount",
-				"CheckforDuplicatesCompanies aggregate(groupBy(Source_File),",
+				"CheckforDuplicates aggregate(groupBy(Source_File),",
 				"     DuplicateRowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
 				"FilterExistingRows@FilterNullRows aggregate(groupBy(Source_File),",
 				"     ERowcount = sum(1)) ~> ErrorRowCount",
@@ -153,7 +153,7 @@
 				"MergeIgnoreRows derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
 				"          ERowcount = iif(isNull(ERowcount),0,toInteger(ERowcount)),",
 				"          IRowCount = iif(isNull(IRowCount),0,toInteger(IRowCount))) ~> FixNulls",
-				"ReadCompaniesSource derive(Source_File = 'Company') ~> AddSourceFile",
+				"ReadSource derive(Source_File = 'Company') ~> AddSourceFile",
 				"MarkCompanies sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
