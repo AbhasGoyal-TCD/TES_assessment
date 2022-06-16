@@ -1,0 +1,220 @@
+{
+	"name": "CompaniesMetadata_copy1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "PostalCodesExcel",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "PostalCodesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "ReadSQL"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "PostalCodesSQL",
+						"type": "DatasetReference"
+					},
+					"name": "InsertinSQL",
+					"rejectedDataLinkedService": {
+						"referenceName": "AzureBlobStorage1",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"dataset": {
+						"referenceName": "DumpNullMetaRows",
+						"type": "DatasetReference"
+					},
+					"name": "RecordNullRows"
+				},
+				{
+					"dataset": {
+						"referenceName": "MetaDataLogs",
+						"type": "DatasetReference"
+					},
+					"name": "AddLogs"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CheckforDuplicates"
+				},
+				{
+					"name": "CheckUpdate"
+				},
+				{
+					"name": "MarkUpdates"
+				},
+				{
+					"name": "TransformType"
+				},
+				{
+					"name": "FilterExistingRows"
+				},
+				{
+					"name": "SourceRowCount"
+				},
+				{
+					"name": "DuplicateRowCount"
+				},
+				{
+					"name": "ErrorRowCount"
+				},
+				{
+					"name": "IgnoreRowCount"
+				},
+				{
+					"name": "MergeDuplicateRows"
+				},
+				{
+					"name": "MergeErrorRows"
+				},
+				{
+					"name": "MergeIgnoreRows"
+				},
+				{
+					"name": "FixNulls"
+				},
+				{
+					"name": "AddSourceFile"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          postal_code as string,",
+				"          state as string,",
+				"          region as string,",
+				"          country as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> ReadSource",
+				"source(output(",
+				"          Postal_Code as integer,",
+				"          State as string,",
+				"          Region as string,",
+				"          Country_Region as string,",
+				"          Country as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ReadSQL",
+				"AddSourceFile aggregate(groupBy(postal_code,",
+				"          state,",
+				"          region,",
+				"          country,",
+				"          Source_File),",
+				"     Dummy = sum(1)) ~> CheckforDuplicates",
+				"TransformType, ReadSQL join(TransformType@postal_code == ReadSQL@Postal_Code,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> CheckUpdate",
+				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@state!=FilterExistingRows@Retain@State||FilterExistingRows@Retain@region!=FilterExistingRows@Retain@Region||FilterExistingRows@Retain@country!=FilterExistingRows@Retain@Country||FilterExistingRows@Retain@Country_Region!=FilterExistingRows@Retain@Country_Region)) ~> MarkUpdates",
+				"CheckforDuplicates derive(postal_code = toInteger(postal_code),",
+				"          Country_Region = case(region == 'East', 'Eastern US', case(region == 'West', 'Western US', case(region == 'Central', 'Central US', case(region == 'South', 'Southern US', ''))))) ~> TransformType",
+				"CheckUpdate split((CheckforDuplicates@state != ReadSQL@State || CheckforDuplicates@region != ReadSQL@Region || CheckforDuplicates@country != ReadSQL@Country || TransformType@Country_Region != ReadSQL@Country_Region) \r",
+				"&& (!isNull(TransformType@postal_code) && !isNull(CheckforDuplicates@state) && !isNull(CheckforDuplicates@region) && !isNull(CheckforDuplicates@country) && !isNull(TransformType@Country_Region)),",
+				"     (isNull(TransformType@postal_code) || isNull(CheckforDuplicates@state) || isNull(CheckforDuplicates@region) || isNull(CheckforDuplicates@country) || isNull(TransformType@Country_Region)),",
+				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",
+				"AddSourceFile aggregate(groupBy(Source_File),",
+				"     SRowCount = sum(1)) ~> SourceRowCount",
+				"CheckforDuplicates aggregate(groupBy(Source_File),",
+				"     DuplicateRowCount = sum(iif(Dummy != 1, Dummy - 1, toLong(0)))) ~> DuplicateRowCount",
+				"FilterExistingRows@FilterNullRows aggregate(groupBy(Source_File),",
+				"     ERowcount = sum(1)) ~> ErrorRowCount",
+				"FilterExistingRows@Ignore aggregate(groupBy(Source_File),",
+				"     IRowCount = sum(1)) ~> IgnoreRowCount",
+				"SourceRowCount, DuplicateRowCount join(SourceRowCount@Source_File == DuplicateRowCount@Source_File,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeDuplicateRows",
+				"MergeDuplicateRows, ErrorRowCount join(SourceRowCount@Source_File == ErrorRowCount@Source_File,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeErrorRows",
+				"MergeErrorRows, IgnoreRowCount join(SourceRowCount@Source_File == IgnoreRowCount@Source_File,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MergeIgnoreRows",
+				"MergeIgnoreRows derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
+				"          ERowcount = iif(isNull(ERowcount),0,toInteger(ERowcount)),",
+				"          IRowCount = iif(isNull(IRowCount),0,toInteger(IRowCount))) ~> FixNulls",
+				"ReadSource derive(Source_File = 'PostalCodes') ~> AddSourceFile",
+				"MarkUpdates sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          Postal_Code as integer,",
+				"          State as string,",
+				"          Region as string,",
+				"          Country_Region as string,",
+				"          Country as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['Postal_Code'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'allErrors',",
+				"     outputRejectedData: true,",
+				"     rejectedData_container: 'tesmetadata',",
+				"     transactionCommit: 'single',",
+				"     reportSuccessOnError: false,",
+				"     mapColumn(",
+				"          Postal_Code = FilterExistingRows@Retain@postal_code,",
+				"          State = FilterExistingRows@Retain@state,",
+				"          Region = FilterExistingRows@Retain@region,",
+				"          Country_Region = FilterExistingRows@Retain@Country_Region,",
+				"          Country = FilterExistingRows@Retain@country",
+				"     )) ~> InsertinSQL",
+				"FilterExistingRows@FilterNullRows sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RecordNullRows",
+				"FixNulls sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          SOURCE_FILE as string,",
+				"          SOURCE_ROW_COUNT as integer,",
+				"          ERROR_ROWS as integer,",
+				"          DUPLICATE_ROW_COUNT as integer,",
+				"          IGNORE_ROW_COUNT as integer,",
+				"          FINAL_COUNT as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SOURCE_FILE = SourceRowCount@Source_File,",
+				"          SOURCE_ROW_COUNT = SRowCount,",
+				"          ERROR_ROWS = ERowcount,",
+				"          DUPLICATE_ROW_COUNT = DuplicateRowCount,",
+				"          IGNORE_ROW_COUNT = IRowCount",
+				"     )) ~> AddLogs"
+			]
+		}
+	}
+}
