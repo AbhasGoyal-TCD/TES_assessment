@@ -1,0 +1,146 @@
+{
+	"name": "UploadSouthSalesData",
+	"properties": {
+		"activities": [
+			{
+				"name": "LoadSouthSourceCount",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "LoadSouthSourceCount",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "None",
+					"cacheSinks": {
+						"firstRowOnly": true
+					}
+				}
+			},
+			{
+				"name": "VerifySouthSourceCount",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "LoadSouthSourceCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('LoadSouthSourceCount').output.runStatus.output.sink1.value[0].RowCount,25)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "SouthDataMigrate",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "SouthDataMigrate",
+									"type": "DataFlowReference"
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "UpdateFinalCountSouth",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "SouthDataMigrate",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": "Update MERGED_DATA_LOGS\nSet FINAL_COUNT = (select Count(*) from MERGED_DATA where SOURCE_FILE like '/South_Data/%' and Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%') )\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "FixNullValues",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "VerifySouthSourceCount",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "UPDATE MERGED_DATA_LOGS\nSet DUPLICATE_ROW_COUNT = 0 \nWHERE DUPLICATE_ROW_COUNT is NULL;\n\nUPDATE MERGED_DATA_LOGS\nSet ERROR_ROWS = 0 \nWHERE ERROR_ROWS is NULL;\n"
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-06-12T12:20:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
