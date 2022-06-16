@@ -242,6 +242,31 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "CreateMetaDataLogs",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[META_DATA_LOGS]') AND type in (N'U'))\r\nDROP TABLE [dbo].[META_DATA_LOGS]\r\n\r\n\r\nCREATE TABLE META_DATA_LOGS(\r\n    SOURCE_FILE NVARCHAR(255),\r\n    SOURCE_ROW_COUNT INTEGER,\r\n    ERROR_ROWS INTEGER,\r\n    DUPLICATE_ROW_COUNT INTEGER,\r\n    IGNORE_ROW_COUNT INTEGER,\r\n    FINAL_COUNT INTEGER\r\n);"
+						}
+					]
+				}
 			}
 		],
 		"annotations": []
