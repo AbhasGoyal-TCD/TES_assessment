@@ -16,7 +16,14 @@
 						{
 							"name": "DeleteCentralLatest",
 							"type": "Script",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "DeleteCentralLog",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -41,14 +48,7 @@
 						{
 							"name": "DeleteCentralLog",
 							"type": "Script",
-							"dependsOn": [
-								{
-									"activity": "DeleteCentralLatest",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -87,7 +87,14 @@
 						{
 							"name": "DeleteEastLatest",
 							"type": "Script",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "DeleteEastLog",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -112,14 +119,7 @@
 						{
 							"name": "DeleteEastLog",
 							"type": "Script",
-							"dependsOn": [
-								{
-									"activity": "DeleteEastLatest",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -158,7 +158,14 @@
 						{
 							"name": "DeleteWestLatest",
 							"type": "Script",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "DeleteWestLog",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -183,14 +190,7 @@
 						{
 							"name": "DeleteWestLog",
 							"type": "Script",
-							"dependsOn": [
-								{
-									"activity": "DeleteWestLatest",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -229,7 +229,14 @@
 						{
 							"name": "DeleteSouthLatest",
 							"type": "Script",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "DeleteSouthLog",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
@@ -254,14 +261,7 @@
 						{
 							"name": "DeleteSouthLog",
 							"type": "Script",
-							"dependsOn": [
-								{
-									"activity": "DeleteSouthLatest",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 0,
