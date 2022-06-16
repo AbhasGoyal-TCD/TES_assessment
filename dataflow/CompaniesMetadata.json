@@ -54,7 +54,7 @@
 					"name": "CheckUpdate"
 				},
 				{
-					"name": "MarkCompanies"
+					"name": "MarkUpdates"
 				},
 				{
 					"name": "TransformType"
@@ -121,7 +121,7 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> CheckUpdate",
-				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company!=FilterExistingRows@Retain@Company||FilterExistingRows@Retain@contact!=FilterExistingRows@Retain@Contact||FilterExistingRows@Retain@region!=FilterExistingRows@Retain@Region)) ~> MarkCompanies",
+				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@company!=FilterExistingRows@Retain@Company||FilterExistingRows@Retain@contact!=FilterExistingRows@Retain@Contact||FilterExistingRows@Retain@region!=FilterExistingRows@Retain@Region)) ~> MarkUpdates",
 				"CheckforDuplicates derive(company_id = toInteger(company_id)) ~> TransformType",
 				"CheckUpdate split((CheckforDuplicates@company != ReadSQL@Company || CheckforDuplicates@contact != ReadSQL@Contact || CheckforDuplicates@region != ReadSQL@Region) \r",
 				"&& (!isNull(TransformType@company_id) && !isNull(CheckforDuplicates@company) && !isNull(CheckforDuplicates@contact) && !isNull(CheckforDuplicates@region)),",
@@ -154,7 +154,7 @@
 				"          ERowcount = iif(isNull(ERowcount),0,toInteger(ERowcount)),",
 				"          IRowCount = iif(isNull(IRowCount),0,toInteger(IRowCount))) ~> FixNulls",
 				"ReadSource derive(Source_File = 'Company') ~> AddSourceFile",
-				"MarkCompanies sink(allowSchemaDrift: false,",
+				"MarkUpdates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
 				"          Company_ID as integer,",
