@@ -86,6 +86,9 @@
 				},
 				{
 					"name": "MergeShipMode"
+				},
+				{
+					"name": "FixNullValues"
 				}
 			],
 			"scriptLines": [
@@ -182,6 +185,8 @@
 				"     matchType:'fuzzy',",
 				"     ignoreSpaces: true,",
 				"     broadcast: 'off')~> MergeShipMode",
+				"AddErrorRoes derive(DuplicateRowCount = iif(isNull(DuplicateRowCount),0,toInteger(DuplicateRowCount)),",
+				"          ErrorRowCount = iif(isNull(ErrorRowCount),0,toInteger(ErrorRowCount))) ~> FixNullValues",
 				"RemoveDuplicates sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
@@ -247,7 +252,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> InsertinCSV",
-				"AddErrorRoes sink(allowSchemaDrift: false,",
+				"FixNullValues sink(allowSchemaDrift: false,",
 				"     validateSchema: true,",
 				"     input(",
 				"          SOURCE_FILE as string,",
