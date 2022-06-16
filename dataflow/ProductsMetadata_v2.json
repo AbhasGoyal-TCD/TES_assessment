@@ -118,7 +118,7 @@
 				"FilterExistingRows@Retain alterRow(updateIf(FilterExistingRows@Retain@category!=FilterExistingRows@Retain@Category || FilterExistingRows@Retain@product_name != FilterExistingRows@Retain@Product_Name\r",
 				")) ~> MarkUpdates",
 				"CheckUpdate split((isNull(ReadSQL@Product_ID) || (CheckforDuplicates@product_name != CheckforDuplicates@product_name || CheckforDuplicates@category != ReadSQL@Category)) \r",
-				"&& (!isNull(CheckforDuplicates@product_id) && !isNull(CheckforDuplicates@product_name) && isNull(CheckforDuplicates@category)),",
+				"&& (!isNull(CheckforDuplicates@product_id) && !isNull(CheckforDuplicates@product_name) && !isNull(CheckforDuplicates@category)),",
 				"     (isNull(CheckforDuplicates@product_id) || isNull(CheckforDuplicates@product_name) || isNull(CheckforDuplicates@category)),",
 				"     disjoint: false) ~> FilterExistingRows@(Retain, FilterNullRows, Ignore)",
 				"AddSourceFile aggregate(groupBy(Source_File),",

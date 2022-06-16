@@ -319,7 +319,7 @@
 							"type": "Script",
 							"dependsOn": [
 								{
-									"activity": "ProductTypesMetadata",
+									"activity": "UpdateFinalCountProductTypes",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -484,7 +484,7 @@
 							"type": "Script",
 							"dependsOn": [
 								{
-									"activity": "ProductsMetadata_v2",
+									"activity": "UpdateFinalCountProducts",
 									"dependencyConditions": [
 										"Succeeded"
 									]
