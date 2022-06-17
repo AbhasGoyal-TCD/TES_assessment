@@ -100,6 +100,7 @@
 				"     ignoreNoFilesFound: false,",
 				"     rowUrlColumn: 'Source_File',",
 				"     documentForm: 'documentPerLine',",
+				"     wildcardPaths:['South_Data/*.json'],",
 				"     mode: 'read') ~> ReadSource",
 				"source(output(",
 				"          {Segment Allowed} as string",
