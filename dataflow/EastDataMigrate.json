@@ -110,7 +110,7 @@
 				"     validateSchema: true,",
 				"     ignoreNoFilesFound: false,",
 				"     rowUrlColumn: 'Source_File',",
-				"     wildcardPaths:['East_data/*.csv'],",
+				"     wildcardPaths:['East_Data/*.csv'],",
 				"     mode: 'read') ~> ReadSource",
 				"source(output(",
 				"          {Segment Allowed} as string",
