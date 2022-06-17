@@ -96,7 +96,7 @@
 							"scripts": [
 								{
 									"type": "NonQuery",
-									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Companies]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Companies]\r\nGO\r\n\r\nCREATE TABLE Companies(\r\n    Company_ID INTEGER PRIMARY KEY,\r\n    Company NVARCHAR(255),\r\n    Contact NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n);"
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Companies]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Companies]\r\n\r\n\r\nCREATE TABLE Companies(\r\n    Company_ID INTEGER PRIMARY KEY,\r\n    Company NVARCHAR(255),\r\n    Contact NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n);"
 								}
 							]
 						}
@@ -104,7 +104,14 @@
 					{
 						"name": "CreatePostalCode",
 						"type": "Script",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "CheckandDeleteMergedData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "7.00:00:00",
 							"retry": 0,
@@ -121,7 +128,7 @@
 							"scripts": [
 								{
 									"type": "NonQuery",
-									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Postal_Code]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Postal_Code]\r\nGO\r\n\r\nCREATE TABLE Postal_Code(\r\n    Postal_Code INTEGER PRIMARY KEY,\r\n    State NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n    Country_Region NVARCHAR(255),\r\n    Country NVARCHAR(255)\r\n);"
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Postal_Code]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Postal_Code]\r\n\r\n\r\nCREATE TABLE Postal_Code(\r\n    Postal_Code INTEGER PRIMARY KEY,\r\n    State NVARCHAR(255),\r\n    Region NVARCHAR(255),\r\n    Country_Region NVARCHAR(255),\r\n    Country NVARCHAR(255)\r\n);"
 								}
 							]
 						}
@@ -129,7 +136,14 @@
 					{
 						"name": "CreateProductType",
 						"type": "Script",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "CheckandDeleteProducts",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "7.00:00:00",
 							"retry": 0,
@@ -146,7 +160,7 @@
 							"scripts": [
 								{
 									"type": "NonQuery",
-									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Product_Types]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Product_Types]\r\nGO\r\n\r\nCREATE TABLE Product_Types(\r\n    Product_Type NVARCHAR(255) PRIMARY KEY,\r\n    Product_Category NVARCHAR(255)\r\n);"
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Product_Types]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Product_Types]\r\n\r\n\r\nCREATE TABLE Product_Types(\r\n    Product_Type NVARCHAR(255) PRIMARY KEY,\r\n    Product_Category NVARCHAR(255)\r\n);"
 								}
 							]
 						}
@@ -178,7 +192,7 @@
 							"scripts": [
 								{
 									"type": "NonQuery",
-									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND type in (N'U'))\r\nDROP TABLE [dbo].[Products]\r\nGO\r\n\r\nCREATE TABLE Products(\r\n    Product_ID NVARCHAR(255) PRIMARY KEY,\r\n    Product_Name NVARCHAR(255),\r\n    Category NVARCHAR(255),\r\n    FOREIGN KEY (Category) REFERENCES Product_Types(Product_Type)\r\n);"
+									"text": "CREATE TABLE Products(\r\n    Product_ID NVARCHAR(255) PRIMARY KEY,\r\n    Product_Name NVARCHAR(255),\r\n    Category NVARCHAR(255),\r\n    FOREIGN KEY (Category) REFERENCES Product_Types(Product_Type)\r\n);"
 								}
 							]
 						}
@@ -216,7 +230,7 @@
 							"scripts": [
 								{
 									"type": "NonQuery",
-									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA]') AND type in (N'U'))\r\nDROP TABLE [dbo].[MERGED_DATA]\r\nGO\r\n\r\nCREATE TABLE MERGED_DATA(\r\n    Order_ID NVARCHAR(255),\r\n    Order_Date DATE,\r\n    Ship_Date DATE,\r\n    Ship_Mode NVARCHAR(255),\r\n    Customer_ID NVARCHAR(255),\r\n    Segment NVARCHAR(255),\r\n    Postal_Code INTEGER,\r\n    Product_ID NVARCHAR(255),\r\n    SALES decimal(20,2),\r\n    QUANTITY INTEGER,\r\n    Discount FLOAT,\r\n    Profit FLOAT,\r\n    Create_Timestamp DATETIME,\r\n    SOURCE_FILE NVARCHAR(255),\r\n    FOREIGN KEY (Postal_Code) REFERENCES Postal_Code(Postal_Code),\r\n    FOREIGN KEY (Product_ID) REFERENCES Products(Product_ID)\r\n);"
+									"text": "CREATE TABLE MERGED_DATA(\r\n    Order_ID NVARCHAR(255),\r\n    Order_Date DATE,\r\n    Ship_Date DATE,\r\n    Ship_Mode NVARCHAR(255),\r\n    Customer_ID NVARCHAR(255),\r\n    Segment NVARCHAR(255),\r\n    Postal_Code INTEGER,\r\n    Product_ID NVARCHAR(255),\r\n    SALES decimal(20,2),\r\n    QUANTITY INTEGER,\r\n    Discount FLOAT,\r\n    Profit FLOAT,\r\n    Create_Timestamp DATETIME,\r\n    SOURCE_FILE NVARCHAR(255),\r\n    FOREIGN KEY (Postal_Code) REFERENCES Postal_Code(Postal_Code),\r\n    FOREIGN KEY (Product_ID) REFERENCES Products(Product_ID)\r\n);"
 								}
 							]
 						}
@@ -241,7 +255,89 @@
 							"scripts": [
 								{
 									"type": "NonQuery",
-									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA_LOGS]') AND type in (N'U'))\r\nDROP TABLE [dbo].[MERGED_DATA_LOGS]\r\nGO\r\n\r\nCREATE TABLE MERGED_DATA_LOGS(\r\n    SOURCE_FILE NVARCHAR(255),\r\n    TIMESTAMP DATETIME,\r\n    SOURCE_ROW_COUNT INTEGER,\r\n    ERROR_ROWS INTEGER,\r\n    DUPLICATE_ROW_COUNT INTEGER,\r\n    FINAL_COUNT INTEGER\r\n);"
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA_LOGS]') AND type in (N'U'))\r\nDROP TABLE [dbo].[MERGED_DATA_LOGS]\r\n\r\n\r\nCREATE TABLE MERGED_DATA_LOGS(\r\n    SOURCE_FILE NVARCHAR(255),\r\n    TIMESTAMP DATETIME,\r\n    SOURCE_ROW_COUNT INTEGER,\r\n    ERROR_ROWS INTEGER,\r\n    DUPLICATE_ROW_COUNT INTEGER,\r\n    FINAL_COUNT INTEGER\r\n);"
+								}
+							]
+						}
+					},
+					{
+						"name": "CheckandDeleteMergedData",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[MERGED_DATA]') AND type in (N'U'))\nDROP TABLE [dbo].[MERGED_DATA]"
+								}
+							]
+						}
+					},
+					{
+						"name": "CheckandDeleteProducts",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "CheckandDeleteMergedData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND type in (N'U'))\nDROP TABLE [dbo].[Products]"
+								}
+							]
+						}
+					},
+					{
+						"name": "CreateMetaDataLogs",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "NonQuery",
+									"text": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[META_DATA_LOGS]') AND type in (N'U'))\r\nDROP TABLE [dbo].[META_DATA_LOGS]\r\n\r\n\r\nCREATE TABLE META_DATA_LOGS(\r\n    SOURCE_FILE NVARCHAR(255),\r\n    SOURCE_ROW_COUNT INTEGER,\r\n    ERROR_ROWS INTEGER,\r\n    DUPLICATE_ROW_COUNT INTEGER,\r\n    IGNORE_ROW_COUNT INTEGER,\r\n    FINAL_COUNT INTEGER\r\n);"
 								}
 							]
 						}
@@ -250,6 +346,325 @@
 				"policy": {
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RemoveLatestData')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ChecktoDeleteCentral",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.RemoveCentralData, bool(1) )",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "DeleteCentralLatest",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "DeleteCentralLog",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA\nwhere SOURCE_FILE like '/Central_Data/%' and  Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+											}
+										]
+									}
+								},
+								{
+									"name": "DeleteCentralLog",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA_LOGS\nwhere SOURCE_FILE like '/Central_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/Central_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ChecktoDeleteEast",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.RemoveEastData, bool(1) )",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "DeleteEastLatest",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "DeleteEastLog",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA\nwhere SOURCE_FILE like '/East_Data/%' and  Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+											}
+										]
+									}
+								},
+								{
+									"name": "DeleteEastLog",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA_LOGS\r\nwhere SOURCE_FILE like '/East_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/East_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ChecktoDeleteWest",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.RemoveWestData, bool(1) )",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "DeleteWestLatest",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "DeleteWestLog",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA\nwhere SOURCE_FILE like '/West_Data/%' and  Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+											}
+										]
+									}
+								},
+								{
+									"name": "DeleteWestLog",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA_LOGS\r\nwhere SOURCE_FILE like '/West_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ChecktoDeleteSouth",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.RemoveSouthData, bool(1) )",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "DeleteSouthLatest",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "DeleteSouthLog",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA\nwhere SOURCE_FILE like '/West_Data/%' and  Create_Timestamp = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/West_Data/%')"
+											}
+										]
+									}
+								},
+								{
+									"name": "DeleteSouthLog",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "NonQuery",
+												"text": "delete from MERGED_DATA_LOGS\r\nwhere SOURCE_FILE like '/South_Data/%' and  TIMESTAMP = (select MAX(Create_Timestamp) from MERGED_DATA WHERE SOURCE_FILE like '/South_Data/%')"
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"RemoveCentralData": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"RemoveEastData": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"RemoveSouthData": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"RemoveWestData": {
+						"type": "bool",
+						"defaultValue": true
+					}
 				},
 				"annotations": []
 			},
@@ -403,6 +818,68 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DatavalidationSegment')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Segment",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "Data Validation.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "Segment Allowed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DatavalidationShipMode')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Ship Mode",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "Data Validation.xlsx",
+						"container": "tesmetadata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "Ship Mode Allowed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -524,6 +1001,34 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureTableStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DumpNullMetaRows')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "Error_rows",
+						"container": "tesmetadata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
 			]
 		},
 		{
@@ -741,6 +1246,57 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/MetaDataLogs')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "SOURCE_FILE",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SOURCE_ROW_COUNT",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ERROR_ROWS",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "DUPLICATE_ROW_COUNT",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "IGNORE_ROW_COUNT",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "FINAL_COUNT",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "META_DATA_LOGS"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PostalCodesExcel')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -781,187 +1337,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PostalCodesSQL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Postal_Code",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "State",
-						"type": "nvarchar"
-					},
-					{
-						"name": "Region",
-						"type": "nvarchar"
-					},
-					{
-						"name": "Country_Region",
-						"type": "varchar"
-					},
-					{
-						"name": "Country",
-						"type": "nvarchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "Postal_Code"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ProductTypesExcel')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": "product_types",
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": "group_reference_data.xlsx",
-						"container": "tesmetadata"
-					},
-					"firstRowAsHeader": true
-				},
-				"schema": [
-					{
-						"name": "product_type",
-						"type": "String"
-					},
-					{
-						"name": "product_category",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ProductTypesSQL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Product_Type",
-						"type": "nvarchar"
-					},
-					{
-						"name": "Product_Category",
-						"type": "nvarchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "Product_Types"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ProductsExcel')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": "products",
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": "group_reference_data.xlsx",
-						"container": "tesmetadata"
-					},
-					"firstRowAsHeader": true
-				},
-				"schema": [
-					{
-						"name": "product_id",
-						"type": "String"
-					},
-					{
-						"name": "product_name",
-						"type": "String"
-					},
-					{
-						"name": "category",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ProductsSQL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Product_ID",
-						"type": "nvarchar"
-					},
-					{
-						"name": "Product_Name",
-						"type": "nvarchar"
-					},
-					{
-						"name": "Category",
-						"type": "nvarchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "Products"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		}
 	]
